@@ -35,7 +35,7 @@ CATEGORIES = {
     }
 }
 
-# 4. 국내 주요 연예/엔터 공식 RSS 피드 (K-POP, 드라마, 영화, 패션 기사 대량 확보)
+# 4. 국내 주요 연예/엔터 공식 RSS 피드
 RSS_FEEDS = [
     {
         "category": "music",
@@ -59,13 +59,13 @@ RSS_FEEDS = [
     }
 ]
 
-# 5. 구글 애드센스 설정 (승인 전 HTML 주석 처리로 비노출)
+# 5. 구글 애드센스 설정
 ADSENSE_CLIENT = "ca-pub-XXXXXXXXXXXXXXXX"
 ADSENSE_SLOT_FACTBOX_BELOW = "1234567890"
 ADSENSE_SLOT_SIDEBAR_FIXED = "2345678901"
 ADSENSE_SLOT_MULTIPLEX_END = "3456789012"
 
 # 6. 발행 및 빌드 제어
-ITEMS_PER_RUN = 4
+ITEMS_PER_RUN = 2
 POSTS_META_PATH = "posts_meta.json"
 OUTPUT_DIR = "dist"
