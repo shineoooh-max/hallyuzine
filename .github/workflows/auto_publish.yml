@@ -35,7 +35,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python builder.py
+          python -u builder.py
 
       - name: Commit and push generated site
         run: |
