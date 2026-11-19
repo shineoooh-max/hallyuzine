@@ -5,13 +5,13 @@ config.py - HALLYUZINE 핵심 환경설정 및 메타데이터
 # 1. 사이트 기본 정보
 SITE_NAME = "HALLYUZINE"
 SITE_TAGLINE = "The Global Editorial Magazine for K-Culture & Pop Trends"
-SITE_URL = "https://hallyuzine.koo1000.com"  # 실제 연결할 도메인 또는 GitHub Pages URL로 수정
+SITE_URL = "https://hallyuzine.koo1000.com"
 LANGUAGE = "en"
 
 # 2. Gemini 모델 설정
 GEMINI_MODEL = "gemini-3.8-flash"
 
-# 3. 4대 핵심 카테고리 및 전용 서브페이지 파일명 매핑 (옵션 B)
+# 3. 4대 핵심 카테고리 및 전용 서브페이지 파일명 매핑
 CATEGORIES = {
     "music": {
         "label": "MUSIC & CHARTS",
@@ -35,27 +35,37 @@ CATEGORIES = {
     }
 }
 
-# 4. 국내 공식 소스 RSS 피드 (카테고리별 매핑)
+# 4. 국내 주요 연예/엔터 공식 RSS 피드 (K-POP, 드라마, 영화, 패션 기사 대량 확보)
 RSS_FEEDS = [
     {
         "category": "music",
         "url": "https://www.yna.co.kr/rss/entertainment.xml",
-        "source_name": "Yonhap News"
+        "source_name": "Yonhap Entertainment"
     },
     {
         "category": "ott",
-        "url": "https://www.yna.co.kr/rss/culture.xml",
-        "source_name": "Yonhap Culture"
+        "url": "https://rss.donga.com/enter.xml",
+        "source_name": "Sports Donga Entertainment"
+    },
+    {
+        "category": "style",
+        "url": "https://www.hankyung.com/feed/entertainment",
+        "source_name": "Hankyung Entertainment"
+    },
+    {
+        "category": "culture",
+        "url": "https://www.khan.co.kr/rss/rssdata/culture_news.xml",
+        "source_name": "Kyunghyang Culture"
     }
 ]
 
-# 5. 구글 애드센스 설정 (비침해형 슬롯)
+# 5. 구글 애드센스 설정 (승인 전 HTML 주석 처리로 비노출)
 ADSENSE_CLIENT = "ca-pub-XXXXXXXXXXXXXXXX"
-ADSENSE_SLOT_FACTBOX_BELOW = "1234567890"   # 본문 Fact Box 하단 네이티브 배너
-ADSENSE_SLOT_SIDEBAR_FIXED = "2345678901"   # 데스크톱 우측 300x600 고정 배너
-ADSENSE_SLOT_MULTIPLEX_END = "3456789012"   # 본문 종료 후 멀티플렉스 추천
+ADSENSE_SLOT_FACTBOX_BELOW = "1234567890"
+ADSENSE_SLOT_SIDEBAR_FIXED = "2345678901"
+ADSENSE_SLOT_MULTIPLEX_END = "3456789012"
 
 # 6. 발행 및 빌드 제어
-ITEMS_PER_RUN = 4               # 1회 실행당 최대 신규 발행 건수 (1일 2회 실행 시 하루 8건)
+ITEMS_PER_RUN = 4
 POSTS_META_PATH = "posts_meta.json"
 OUTPUT_DIR = "dist"
