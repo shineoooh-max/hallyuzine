@@ -46,6 +46,9 @@ def extract_safe_article_data(article_url: str) -> dict:
     for tag in soup(["script", "style", "nav", "footer", "header", "aside", "iframe"]):
         tag.decompose()
 
+    # 전체 텍스트(figcaption, span, em 캡션 포함)에서 공식 제공 출처 검사
+    full_text = soup.get_text(" ", strip=True)
+
     paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p")]
     clean_text = "\n".join([p for p in paragraphs if len(p) > 25])
     if len(clean_text) < 180:
@@ -57,8 +60,8 @@ def extract_safe_article_data(article_url: str) -> dict:
     if not og_img or any(bad in og_img.lower() for bad in BANNED_IMG_KEYWORDS):
         return {}
 
-    # 공식 배포 사진(사진제공=기획사/방송사) 여부 검증
-    credit_match = OFFICIAL_CREDIT_PATTERN.search(clean_text)
+    # 캡션 포함 전체 텍스트에서 공식 배포 사진(사진제공=기획사/방송사) 검증
+    credit_match = OFFICIAL_CREDIT_PATTERN.search(full_text)
     if not credit_match:
         return {}
 
