@@ -45,25 +45,21 @@ def slugify(text: str) -> str:
 
 def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | None:
     """
-    국내 연예/문화 팩트 원문을 받아 Esquire/Elle 톤의 세련된 영문 매거진 기사와
-    THE DOSSIER(핵심 요약 카드) JSON으로 변환합니다.
+    국내 연예/문화 팩트 원문을 받아 Esquire/Elle 톤의 세련된 영문 매거진 기사로 변환합니다.
+    해외 K-컬처 독자에게 무의미한 내수 단신은 skip 처리하며, 503 에러 시 자동 재시도합니다.
     """
     prompt = f"""
-You are a senior editor at HALLYUZINE, a global digital magazine covering Korean pop culture, cinema, fashion, and Seoul lifestyle for English-speaking readers.
+You are a senior editor at HALLYUZINE, a global digital magazine covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
 
-Transform the following Korean news source into an original, authoritative, magazine-grade English feature article.
-Do NOT write cheap gossip or clickbait. Focus on verified facts, industry context, artistic direction, chart/OTT impact, or fashion/cultural details.
+First, evaluate whether this source story is genuinely interesting to global K-culture fans (e.g., K-Pop comebacks, Billboard/Spotify charts, Netflix/OTT series, Korean movies, actor/idol fashion, Seoul culture).
+If it is purely domestic corporate M&A, local government policy, or mundane local news irrelevant to international fans, return ONLY: {{"skip": true}}
 
-[SOURCE TITLE]
-{candidate['raw_title']}
-
-[SOURCE FACTS]
-{candidate['raw_text']}
-
+Otherwise, transform it into an original, authoritative, magazine-grade English feature article.
 Return ONLY a valid JSON object with the exact keys below:
 {{
+  "skip": false,
   "category": "Choose strictly one of: music, ott, style, culture",
-  "title": "Punchy, sophisticated magazine headline in English (max 85 chars, no 'K-' hyphenated cliches if avoidable)",
+  "title": "Punchy, sophisticated magazine headline in English (max 85 chars)",
   "subtitle": "Compelling 1-sentence editorial deck summarizing why this matters globally (max 150 chars)",
   "dossier_facts": [
     "Fact 1: Key release date, platform, or official title",
@@ -72,23 +68,35 @@ Return ONLY a valid JSON object with the exact keys below:
   ],
   "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h3> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <h2>, <html>, or markdown."
 }}
+
+[SOURCE TITLE]
+{candidate['raw_title']}
+
+[SOURCE FACTS]
+{candidate['raw_text']}
 """
-    try:
-        response = client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.65,
-            ),
-        )
-        data = json.loads(response.text)
-        if data.get("category") not in config.CATEGORIES:
-            data["category"] = candidate["category"]
-        return data
-    except Exception as e:
-        print(f"[Gemini] 기사 생성 실패 ({candidate['raw_title']}): {e}")
-        return None
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.65,
+                ),
+            )
+            data = json.loads(response.text)
+            if data.get("skip") is True:
+                print(f"[Gemini] 해외 독자 비대상 스킵: {candidate['raw_title']}", flush=True)
+                return None
+            if data.get("category") not in config.CATEGORIES:
+                data["category"] = candidate["category"]
+            return data
+        except Exception as e:
+            print(f"[Gemini] 재시도 ({attempt + 1}/3) - {candidate['raw_title']}: {e}", flush=True)
+            time.sleep(10)
+
+    return None
 
 
 def render_header(
@@ -142,16 +150,16 @@ def build_site() -> None:
     issue_date_str = now_kst.strftime("%b %d, %Y").upper()
     current_year = str(now_kst.year)
 
-    print("[Builder] 신규 국내 공식 소스 탐색 시작...")
+    print("[Builder] 신규 국내 공식 소스 탐색 시작...", flush=True)
     candidates = parser.fetch_rss_candidates(existing_urls)
-    print(f"[Builder] 수집된 유효 후보 기사 수: {len(candidates)}건")
+    print(f"[Builder] 수집된 유효 후보 기사 수: {len(candidates)}건", flush=True)
 
     created_count = 0
     for cand in candidates:
         if created_count >= config.ITEMS_PER_RUN:
             break
 
-        print(f"[Builder] 영문 매거진 변환 중 ({created_count + 1}/{config.ITEMS_PER_RUN}): {cand['raw_title']}")
+        print(f"[Builder] 영문 매거진 변환 중 ({created_count + 1}/{config.ITEMS_PER_RUN}): {cand['raw_title']}", flush=True)
         ai_data = generate_editorial_article(client, cand)
         if not ai_data:
             time.sleep(5)
@@ -195,7 +203,7 @@ def build_site() -> None:
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
 
     if not posts:
-        print("[Builder] 발행할 기사가 없어 기본 빈 페이지만 생성합니다.")
+        print("[Builder] 발행할 기사가 없어 기본 빈 페이지만 생성합니다.", flush=True)
         return
 
     # 1. 개별 기사 상세 페이지(article.html) 빌드
@@ -417,7 +425,7 @@ def build_site() -> None:
     with open(os.path.join(config.OUTPUT_DIR, "robots.txt"), "w", encoding="utf-8") as f:
         f.write(robots_txt)
 
-    print(f"[Builder] 빌드 완료! 총 보유 기사 {len(posts)}건 / 신규 생성 {created_count}건")
+    print(f"[Builder] 빌드 완료! 총 보유 기사 {len(posts)}건 / 신규 생성 {created_count}건", flush=True)
 
 
 if __name__ == "__main__":
