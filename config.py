@@ -9,7 +9,7 @@ SITE_URL = "https://hallyuzine.koo1000.com"  # 실제 연결할 도메인 또는
 LANGUAGE = "en"
 
 # 2. Gemini 모델 설정
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.8-flash"
 
 # 3. 4대 핵심 카테고리 및 전용 서브페이지 파일명 매핑 (옵션 B)
 CATEGORIES = {
