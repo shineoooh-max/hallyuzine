@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title><!--{{PAGE_TITLE}}--></title>
+  <meta name="description" content="<!--{{META_DESCRIPTION}}-->" />
+  <link rel="canonical" href="<!--{{CANONICAL_URL}}-->" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="<!--{{OG_TYPE}}-->" />
+  <meta property="og:site_name" content="HALLYUZINE" />
+  <meta property="og:title" content="<!--{{PAGE_TITLE}}-->" />
+  <meta property="og:description" content="<!--{{META_DESCRIPTION}}-->" />
+  <meta property="og:image" content="<!--{{OG_IMAGE}}-->" />
+  <meta property="og:url" content="<!--{{CANONICAL_URL}}-->" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Google Fonts: Editorial Serif & Clean Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!--{{JSON_LD_SCHEMA}}-->
+
+  <!-- [ADSENSE GLOBAL SCRIPT - 승인 후 아래 주석 해제 및 ca-pub 코드 입력]
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+  -->
+
+  <style>
+    :root {
+      --paper-bg: #F4F1EA;
+      --paper-card: #ECE8DE;
+      --ink-black: #141414;
+      --ink-muted: #52504A;
+      --accent-red: #C81E2B;
+      --border-thin: 1px solid #141414;
+      --border-thick: 2px solid #141414;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--paper-bg);
+      color: var(--ink-black);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--paper-bg);
+      color: var(--ink-black);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* 상단 블랙 헤더 + 슬림 카테고리 네비게이션 (하단 터치 간섭 방지) */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: var(--ink-black);
+      color: var(--paper-bg);
+      border-bottom: var(--border-thick);
+    }
+
+    .masthead-bar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(244, 241, 234, 0.18);
+    }
+
+    .masthead-logo {
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 1.6rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      color: var(--paper-bg);
+    }
+
+    .masthead-meta {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 234, 0.72);
+    }
+
+    .category-nav {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .category-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-nav a {
+      flex: 0 0 auto;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--paper-bg);
+      border-right: 1px solid rgba(244, 241, 234, 0.18);
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .category-nav a:hover,
+    .category-nav a.active {
+      background-color: var(--paper-bg);
+      color: var(--ink-black);
+    }
+
+    /* 공통 컨테이너 */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      border-left: var(--border-thin);
+      border-right: var(--border-thin);
+    }
+
+    @media (max-width: 1280px) {
+      .container {
+        border-left: none;
+        border-right: none;
+      }
+    }
+
+    /* 카테고리 뱃지 */
+    .cat-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-red);
+      margin-bottom: 0.45rem;
+    }
+
+    /* 푸터 */
+    .site-footer {
+      border-top: var(--border-thick);
+      background-color: var(--ink-black);
+      color: var(--paper-bg);
+      padding: 2.5rem 1.25rem;
+      margin-top: 3rem;
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .footer-brand {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+
+    .footer-desc {
+      font-size: 0.82rem;
+      color: rgba(244, 241, 234, 0.72);
+      max-width: 560px;
+      margin: 0;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(244, 241, 234, 0.2);
+    }
+
+    .footer-copy {
+      font-size: 0.72rem;
+      color: rgba(244, 241, 234, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead-bar">
+      <a href="index.html" class="masthead-logo">HALLYUZINE</a>
+      <span class="masthead-meta"><!--{{ISSUE_DATE}}--> • SEOUL</span>
+    </div>
+    <nav class="category-nav" aria-label="Magazine Sections">
+      <a href="index.html" class="<!--{{NAV_HOME_ACTIVE}}-->">COVER</a>
+      <a href="music.html" class="<!--{{NAV_MUSIC_ACTIVE}}-->">MUSIC &amp; CHARTS</a>
+      <a href="ott.html" class="<!--{{NAV_OTT_ACTIVE}}-->">SCREEN &amp; OTT</a>
+      <a href="style.html" class="<!--{{NAV_STYLE_ACTIVE}}-->">STYLE &amp; GLAM</a>
+      <a href="culture.html" class="<!--{{NAV_CULTURE_ACTIVE}}-->">CULTURE &amp; SPOTS</a>
+    </nav>
+  </header>
