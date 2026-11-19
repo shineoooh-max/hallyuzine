@@ -45,19 +45,15 @@ def slugify(text: str) -> str:
 
 def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | None:
     """
-    국내 연예/문화 팩트 원문을 받아 Esquire/Elle 톤의 세련된 영문 매거진 기사로 변환합니다.
-    해외 K-컬처 독자에게 무의미한 내수 단신은 skip 처리하며, 503 에러 시 자동 재시도합니다.
+    config.GEMINI_MODEL 단일 모델로 영문 매거진 기사를 생성합니다.
+    별도 스킵 필터 없이 즉시 변환하며, 실패 시 3초 대기 후 최대 2회 시도합니다.
     """
     prompt = f"""
 You are a senior editor at HALLYUZINE, a global digital magazine covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
 
-First, evaluate whether this source story is genuinely interesting to global K-culture fans (e.g., K-Pop comebacks, Billboard/Spotify charts, Netflix/OTT series, Korean movies, actor/idol fashion, Seoul culture).
-If it is purely domestic corporate M&A, local government policy, or mundane local news irrelevant to international fans, return ONLY: {{"skip": true}}
-
-Otherwise, transform it into an original, authoritative, magazine-grade English feature article.
+Transform the following Korean news source into an original, authoritative, magazine-grade English feature article.
 Return ONLY a valid JSON object with the exact keys below:
 {{
-  "skip": false,
   "category": "Choose strictly one of: music, ott, style, culture",
   "title": "Punchy, sophisticated magazine headline in English (max 85 chars)",
   "subtitle": "Compelling 1-sentence editorial deck summarizing why this matters globally (max 150 chars)",
@@ -75,7 +71,7 @@ Return ONLY a valid JSON object with the exact keys below:
 [SOURCE FACTS]
 {candidate['raw_text']}
 """
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             response = client.models.generate_content(
                 model=config.GEMINI_MODEL,
@@ -86,15 +82,13 @@ Return ONLY a valid JSON object with the exact keys below:
                 ),
             )
             data = json.loads(response.text)
-            if data.get("skip") is True:
-                print(f"[Gemini] 해외 독자 비대상 스킵: {candidate['raw_title']}", flush=True)
-                return None
             if data.get("category") not in config.CATEGORIES:
                 data["category"] = candidate["category"]
+            print(f"[Gemini] 생성 성공 ({config.GEMINI_MODEL}): {data['title']}", flush=True)
             return data
         except Exception as e:
-            print(f"[Gemini] 재시도 ({attempt + 1}/3) - {candidate['raw_title']}: {e}", flush=True)
-            time.sleep(10)
+            print(f"[Gemini] 재시도 ({attempt + 1}/2) - {candidate['raw_title']}: {e}", flush=True)
+            time.sleep(3)
 
     return None
 
@@ -142,7 +136,10 @@ def build_site() -> None:
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.")
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(timeout=30000),
+    )
     posts = load_posts_meta()
     existing_urls = {p["source_url"] for p in posts}
 
@@ -162,7 +159,7 @@ def build_site() -> None:
         print(f"[Builder] 영문 매거진 변환 중 ({created_count + 1}/{config.ITEMS_PER_RUN}): {cand['raw_title']}", flush=True)
         ai_data = generate_editorial_article(client, cand)
         if not ai_data:
-            time.sleep(5)
+            time.sleep(3)
             continue
 
         cat_key = ai_data["category"]
@@ -190,14 +187,11 @@ def build_site() -> None:
         existing_urls.add(cand["source_url"])
         created_count += 1
 
-        # 무료 티어 분당 요청 제한(RPM) 보호용 5초 대기
-        time.sleep(5)
+        time.sleep(3)
 
-    # 최대 120건까지만 메타데이터 유지
     posts = posts[:120]
     save_posts_meta(posts)
 
-    # 출력 디렉터리 초기화 및 재생성
     if os.path.exists(config.OUTPUT_DIR):
         shutil.rmtree(config.OUTPUT_DIR)
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
@@ -287,7 +281,7 @@ def build_site() -> None:
         with open(os.path.join(config.OUTPUT_DIR, post["slug"]), "w", encoding="utf-8") as f:
             f.write(page_html)
 
-    # 2. 카테고리별 전용 서브페이지(music.html, ott.html, style.html, culture.html) 빌드
+    # 2. 카테고리별 전용 서브페이지 빌드
     cat_tpl = load_template("category.html")
     for cat_key, cat_info in config.CATEGORIES.items():
         cat_posts = [p for p in posts if p["category"] == cat_key]
