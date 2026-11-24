@@ -1,9 +1,10 @@
 """
-parser.py - K-컬처 전용 RSS 수집 엔진 (노이즈 차단 + 중복 방지 + 리다이렉트 추적)
+parser.py - K-컬처 전용 RSS 수집 엔진 (노이즈 차단 + 중복 방지 + 한글 URL 인코딩 + 리다이렉트 추적)
 """
 
 import re
 import urllib.request
+from urllib.parse import urlsplit, urlunsplit, quote
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import config
@@ -56,8 +57,16 @@ def is_duplicate_topic(raw_title: str, existing_titles: list[str]) -> bool:
     return False
 
 
+def encode_iri(url: str) -> str:
+    parts = urlsplit(url)
+    path = quote(parts.path, safe="/:@!$&'()*+,;=-._~")
+    query = quote(parts.query, safe="=&?:@!$'()*+,;/-._~")
+    return urlunsplit((parts.scheme, parts.netloc, path, query, parts.fragment))
+
+
 def fetch_url_with_final(url: str, timeout: int = 10) -> tuple[str, str]:
-    req = urllib.request.Request(url, headers=HEADERS)
+    safe_url = encode_iri(url)
+    req = urllib.request.Request(safe_url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         final_url = resp.geturl()
         raw = resp.read(1_500_000)
