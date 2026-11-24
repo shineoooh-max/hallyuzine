@@ -56,7 +56,7 @@ def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | 
     prompt = f"""
 You are a senior editor at HALLYUZINE, a global digital broadsheet covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
 
-First, evaluate if this Korean news source is genuinely relevant and exciting to international K-Culture fans (K-Pop, K-Drama, movies, actors, idols, fashion, Seoul trends).
+First, evaluate if this news topic is genuinely relevant and exciting to international K-Culture fans (K-Pop, K-Drama, movies, actors, idols, fashion, Seoul trends).
 If it is domestic Korean broadcasting regulation, politics, corporate stock filing, or local administrative news with zero global fan appeal, return ONLY:
 {{"skip": true}}
 
@@ -83,13 +83,14 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
 [SOURCE TITLE]
 {candidate['raw_title']}
 
-[SOURCE FACTS]
+[SOURCE CONTEXT]
 {candidate['raw_text']}
 """
-    for attempt in range(2):
+    models_to_try = [config.GEMINI_MODEL, getattr(config, "GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite")]
+    for model_name in models_to_try:
         try:
             response = client.models.generate_content(
-                model=config.GEMINI_MODEL,
+                model=model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -106,11 +107,11 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
 
             score = int(data.get("buzz_score", 88))
             data["buzz_score"] = max(80, min(99, score))
-            print(f"[Gemini] 생성 성공 [{data['category'].upper()}] (Buzz {data['buzz_score']}): {data['title']}", flush=True)
+            print(f"[Gemini] 생성 성공 ({model_name}) [{data['category'].upper()}] (Buzz {data['buzz_score']}): {data['title']}", flush=True)
             return data
         except Exception as e:
-            print(f"[Gemini] 재시도 ({attempt + 1}/2) - {candidate['raw_title']}: {e}", flush=True)
-            time.sleep(3)
+            print(f"[Gemini] 모델 전환 ({model_name} 실패) - {candidate['raw_title']}: {e}", flush=True)
+            time.sleep(2)
 
     return None
 
@@ -151,45 +152,49 @@ Return ONLY valid JSON:
   "option_b_sub": "Short context tag (max 42 chars)"
 }}
 """
-    try:
-        resp = client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.75,
-            ),
-        )
-        ai_debate = json.loads(resp.text)
-        debate = {
-            "week_key": week_key,
-            "question": ai_debate["question"],
-            "option_a_label": ai_debate["option_a_label"],
-            "option_a_sub": ai_debate["option_a_sub"],
-            "option_a_img": top_a["image_url"],
-            "option_a_pct": 53,
-            "option_b_label": ai_debate["option_b_label"],
-            "option_b_sub": ai_debate["option_b_sub"],
-            "option_b_img": top_b["image_url"],
-            "option_b_pct": 47
-        }
-        save_json(config.DEBATE_META_PATH, debate)
-        print(f"[Debate] 주간 밸런스 게임 갱신 완료 ({week_key}): {debate['question']}", flush=True)
-        return debate
-    except Exception as e:
-        print(f"[Debate] 기본 투표 위젯 사용: {e}", flush=True)
-        return {
-            "week_key": week_key,
-            "question": "Which Seoul headline owns your weekend watchlist?",
-            "option_a_label": top_a["title"][:34],
-            "option_a_sub": top_a["category_label"],
-            "option_a_img": top_a["image_url"],
-            "option_a_pct": 52,
-            "option_b_label": top_b["title"][:34],
-            "option_b_sub": top_b["category_label"],
-            "option_b_img": top_b["image_url"],
-            "option_b_pct": 48
-        }
+    models_to_try = [config.GEMINI_MODEL, getattr(config, "GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite")]
+    for model_name in models_to_try:
+        try:
+            resp = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.75,
+                ),
+            )
+            ai_debate = json.loads(resp.text)
+            debate = {
+                "week_key": week_key,
+                "question": ai_debate["question"],
+                "option_a_label": ai_debate["option_a_label"],
+                "option_a_sub": ai_debate["option_a_sub"],
+                "option_a_img": top_a["image_url"],
+                "option_a_pct": 53,
+                "option_b_label": ai_debate["option_b_label"],
+                "option_b_sub": ai_debate["option_b_sub"],
+                "option_b_img": top_b["image_url"],
+                "option_b_pct": 47
+            }
+            save_json(config.DEBATE_META_PATH, debate)
+            print(f"[Debate] 주간 밸런스 게임 갱신 완료 ({model_name}, {week_key}): {debate['question']}", flush=True)
+            return debate
+        except Exception as e:
+            print(f"[Debate] 모델 전환 ({model_name} 실패): {e}", flush=True)
+            time.sleep(2)
+
+    return {
+        "week_key": week_key,
+        "question": "Which Seoul headline owns your weekend watchlist?",
+        "option_a_label": top_a["title"][:34],
+        "option_a_sub": top_a["category_label"],
+        "option_a_img": top_a["image_url"],
+        "option_a_pct": 52,
+        "option_b_label": top_b["title"][:34],
+        "option_b_sub": top_b["category_label"],
+        "option_b_img": top_b["image_url"],
+        "option_b_pct": 48
+    }
 
 
 def render_header(
