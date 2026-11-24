@@ -36,37 +36,27 @@ CATEGORIES = {
     }
 }
 
-# 4. 해외 GitHub 서버에서도 100% 열리는 한류 전용 RSS 피드
+# 4. 한국 실시간 한류 전용 Google News RSS (최근 24시간 when:1d + 노이즈 제외 연산자)
 RSS_FEEDS = [
     {
         "category": "music",
-        "url": "https://news.google.com/rss/search?q=K-POP+OR+아이돌+OR+컴백&hl=ko&gl=KR&ceid=KR:ko",
-        "source_name": "K-Pop Wire"
+        "url": "https://news.google.com/rss/search?q=(빌보드+케이팝+OR+신곡+발매+OR+월드투어+OR+음반+초동)+-야구+-축구+-감독+-고발+-논란+when:1d&hl=ko&gl=KR&ceid=KR:ko",
+        "source_name": "Korea Music Desk"
     },
     {
         "category": "ott",
-        "url": "https://news.google.com/rss/search?q=넷플릭스+드라마+OR+한국영화+흥행&hl=ko&gl=KR&ceid=KR:ko",
-        "source_name": "K-Screen Wire"
+        "url": "https://news.google.com/rss/search?q=(넷플릭스+드라마+OR+한국영화+박스오피스+OR+디즈니플러스+드라마)+-야구+-축구+-감독+-고발+-논란+when:1d&hl=ko&gl=KR&ceid=KR:ko",
+        "source_name": "Korea Screen Desk"
     },
     {
         "category": "style",
-        "url": "https://news.google.com/rss/search?q=화보+OR+공항패션+OR+앰버서더&hl=ko&gl=KR&ceid=KR:ko",
-        "source_name": "Seoul Style Wire"
+        "url": "https://news.google.com/rss/search?q=(패션+화보+OR+공항패션+OR+글로벌+앰버서더+OR+패션위크)+-야구+-축구+-감독+-고발+-논란+when:1d&hl=ko&gl=KR&ceid=KR:ko",
+        "source_name": "Seoul Style Desk"
     },
     {
         "category": "culture",
-        "url": "https://news.google.com/rss/search?q=성수+팝업+OR+한류+열풍&hl=ko&gl=KR&ceid=KR:ko",
-        "source_name": "Seoul Culture Wire"
-    },
-    {
-        "category": "music",
-        "url": "https://www.soompi.com/feed",
-        "source_name": "Soompi"
-    },
-    {
-        "category": "ott",
-        "url": "https://www.hellokpop.com/feed/",
-        "source_name": "HelloKpop"
+        "url": "https://news.google.com/rss/search?q=(성수+팝업스토어+OR+한류+열풍+OR+K컬처+전시)+-야구+-축구+-감독+-고발+-논란+when:1d&hl=ko&gl=KR&ceid=KR:ko",
+        "source_name": "Seoul Culture Desk"
     }
 ]
 
