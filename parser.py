@@ -1,5 +1,5 @@
 """
-parser.py - K-컬처 전용 RSS 수집 엔진 (노이즈 차단 + 중복 방지 + 한글 URL 인코딩 + 리다이렉트 추적)
+parser.py - 해외 서버 차단 우회형 K-컬처 RSS 수집 엔진
 """
 
 import re
@@ -16,11 +16,6 @@ HEADERS = {
     )
 }
 
-BANNED_IMG_KEYWORDS = [
-    "logo", "default", "noimage", "icon", "avatar", "google", "gstatic"
-]
-
-# 1차 차단: 한국 내수 행정/방송심의/정치/기업공시/사건사고 키워드
 DOMESTIC_NOISE_KEYWORDS = [
     "방미심위", "방통위", "방심위", "심의", "과징금", "행정처분", "국정감사", "국회", "법안",
     "지자체", "군수", "시장", "도지사", "정부", "장관", "대통령", "정당", "선거",
@@ -28,13 +23,12 @@ DOMESTIC_NOISE_KEYWORDS = [
     "부고", "별세", "빈소", "발인", "음주운전", "폭행", "소송", "기소", "구속", "징역", "사망"
 ]
 
-# 2차 검증: 해외 한류 독자 관심 키워드 (최소 1개 이상 포함 필수)
-HALLYU_REQUIRED_KEYWORDS = [
-    "컴백", "신곡", "앨범", "빌보드", "스포티파이", "차트", "콘서트", "월드투어", "팬미팅", "아이돌", "케이팝", "k-pop", "kpop",
-    "넷플릭스", "디즈니", "티빙", "쿠팡플레이", "드라마", "영화", "예능", "시청률", "박스오피스", "칸", "오스카", "에미", "주연", "캐스팅",
-    "화보", "공항패션", "패션위크", "앰버서더", "뷰티", "브랜드", "컬렉션", "메이크업", "스타일",
-    "성수", "팝업", "한류", "서울", "전시", "페스티벌", "웹툰", "애니", "글로벌", "해외"
-]
+DEFAULT_CATEGORY_IMAGES = {
+    "music": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+    "ott": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "style": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80",
+    "culture": "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
+}
 
 
 def tokenize_title(title: str) -> set[str]:
@@ -64,55 +58,37 @@ def encode_iri(url: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, path, query, parts.fragment))
 
 
-def fetch_url_with_final(url: str, timeout: int = 10) -> tuple[str, str]:
+def fetch_xml(url: str, timeout: int = 12) -> str:
     safe_url = encode_iri(url)
     req = urllib.request.Request(safe_url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        final_url = resp.geturl()
-        raw = resp.read(1_500_000)
-        try:
-            return raw.decode("utf-8"), final_url
-        except UnicodeDecodeError:
-            return raw.decode("euc-kr", errors="ignore"), final_url
+        raw = resp.read(2_000_000)
+        return raw.decode("utf-8", errors="ignore")
 
 
-def extract_article_data(article_url: str, source_name: str) -> dict:
-    try:
-        html, final_url = fetch_url_with_final(article_url, timeout=10)
-    except Exception as e:
-        print(f"[Parser] 페이지 스킵 ({article_url}): {e}", flush=True)
-        return {}
+def extract_rss_image(item: ET.Element, desc_html: str, category: str) -> str:
+    for elem in item.iter():
+        tag = elem.tag.lower()
+        if tag.endswith("content") or tag.endswith("thumbnail") or tag.endswith("enclosure"):
+            img_url = elem.attrib.get("url", "")
+            if img_url.startswith("http") and not any(x in img_url.lower() for x in ["logo", "icon", "avatar"]):
+                return img_url
 
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "iframe"]):
-        tag.decompose()
+    if desc_html:
+        soup = BeautifulSoup(desc_html, "html.parser")
+        img = soup.find("img")
+        if img and img.get("src", "").startswith("http"):
+            src = img["src"]
+            if not any(x in src.lower() for x in ["google", "gstatic", "logo", "icon"]):
+                return src
 
-    paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p")]
-    clean_text = "\n".join([p for p in paragraphs if len(p) > 20])
-    if len(clean_text) < 120:
-        return {}
-
-    og_img_tag = soup.find("meta", property="og:image")
-    og_img = og_img_tag["content"].strip() if og_img_tag and og_img_tag.get("content") else ""
-
-    if not og_img or not og_img.startswith("http"):
-        return {}
-    if any(bad in og_img.lower() for bad in BANNED_IMG_KEYWORDS):
-        return {}
-
-    return {
-        "final_url": final_url,
-        "raw_text": clean_text[:3000],
-        "image_url": og_img,
-        "image_credit": f"Photo via {source_name}"
-    }
+    return DEFAULT_CATEGORY_IMAGES.get(category, DEFAULT_CATEGORY_IMAGES["culture"])
 
 
 def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferred_categories: list[str]) -> list[dict]:
     candidates = []
     seen_titles = list(existing_titles)
 
-    # 기사 수가 적은 카테고리 순서대로 피드 우선 정렬
     cat_priority = {cat: idx for idx, cat in enumerate(preferred_categories)}
     sorted_feeds = sorted(config.RSS_FEEDS, key=lambda f: cat_priority.get(f["category"], 99))
 
@@ -125,7 +101,7 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
         source_name = feed["source_name"]
 
         try:
-            xml_data, _ = fetch_url_with_final(rss_url, timeout=10)
+            xml_data = fetch_xml(rss_url, timeout=12)
             root = ET.fromstring(xml_data)
         except Exception as e:
             print(f"[Parser] RSS 오류 ({source_name}): {e}", flush=True)
@@ -138,7 +114,8 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
 
             title_el = item.find("title")
             link_el = item.find("link")
-            if title_el is None or link_el is None:
+            desc_el = item.find("description")
+            if title_el is None or link_el is None or not title_el.text:
                 continue
 
             raw_title = re.sub(r"\s*-\s*[^-]+$", "", title_el.text.strip())
@@ -147,34 +124,32 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
             if link in existing_urls:
                 continue
 
-            # 1차 노이즈 차단
             if any(bad in raw_title for bad in DOMESTIC_NOISE_KEYWORDS):
                 continue
 
-            # 2차 한류 핵심 키워드 포함 여부 확인
-            title_lower = raw_title.lower()
-            if not any(kw in title_lower for kw in HALLYU_REQUIRED_KEYWORDS):
-                continue
-
-            # 3차 제목 유사도 중복 차단
             if is_duplicate_topic(raw_title, seen_titles):
-                print(f"[Parser] 중복 이슈 스킵: {raw_title}", flush=True)
                 continue
 
-            detail = extract_article_data(link, source_name)
-            if not detail or detail["final_url"] in existing_urls:
+            desc_raw = desc_el.text if (desc_el is not None and desc_el.text) else ""
+            soup = BeautifulSoup(desc_raw, "html.parser")
+            clean_desc = soup.get_text(" ", strip=True)
+            raw_text = f"{raw_title}\n{clean_desc}".strip()
+
+            if len(raw_text) < 25:
                 continue
 
-            print(f"[Parser] 후보 기사 확보 [{category.upper()}]: {raw_title}", flush=True)
+            image_url = extract_rss_image(item, desc_raw, category)
+
+            print(f"[Parser] 후보 기사 확보 [{category.upper()}] ({source_name}): {raw_title}", flush=True)
             seen_titles.insert(0, raw_title)
             candidates.append({
                 "category": category,
                 "raw_title": raw_title,
-                "source_url": detail["final_url"],
+                "source_url": link,
                 "source_name": source_name,
-                "raw_text": detail["raw_text"],
-                "image_url": detail["image_url"],
-                "image_credit": detail["image_credit"]
+                "raw_text": raw_text[:2500],
+                "image_url": image_url,
+                "image_credit": f"Editorial Visual / {source_name}"
             })
 
     return candidates
