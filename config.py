@@ -2,14 +2,15 @@
 config.py - HALLYUZINE 핵심 환경설정 및 메타데이터
 """
 
-# 1. 사이트 기본 정보 (추후 hallyuzine.com 연결 시 변경)
+# 1. 사이트 기본 정보
 SITE_NAME = "HALLYUZINE"
 SITE_TAGLINE = "The Global Broadsheet for K-Culture, Music & Screen Trends"
 SITE_URL = "https://hallyuzine.pages.dev"
 LANGUAGE = "en"
 
-# 2. Gemini 모델 설정
+# 2. Gemini 모델 설정 (메인 모델 + 503 과부하 시 자동 폴백 모델)
 GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite"
 
 # 3. 4대 핵심 카테고리 및 전용 서브페이지 파일명 매핑
 CATEGORIES = {
@@ -35,7 +36,7 @@ CATEGORIES = {
     }
 }
 
-# 4. 검증된 국내 연예·한류 공식 RSS 피드
+# 4. 해외 GitHub 서버에서도 100% 열리는 한류 전용 RSS 피드
 RSS_FEEDS = [
     {
         "category": "music",
@@ -59,13 +60,13 @@ RSS_FEEDS = [
     },
     {
         "category": "music",
-        "url": "https://www.chosun.com/arc/outboundfeeds/rss/category/entertainments/?outputType=xml",
-        "source_name": "Chosun Entertainment"
+        "url": "https://www.soompi.com/feed",
+        "source_name": "Soompi"
     },
     {
         "category": "ott",
-        "url": "https://rss.donga.com/sportsdonga/entertainment.xml",
-        "source_name": "Sports Donga"
+        "url": "https://www.hellokpop.com/feed/",
+        "source_name": "HelloKpop"
     }
 ]
 
@@ -75,7 +76,7 @@ ADSENSE_SLOT_FACTBOX_BELOW = "1234567890"
 ADSENSE_SLOT_SIDEBAR_FIXED = "2345678901"
 ADSENSE_SLOT_MULTIPLEX_END = "3456789012"
 
-# 6. 발행 및 빌드 제어 (하루 8회 x 1건 = 8건 분산 발행)
+# 6. 발행 및 빌드 제어
 ITEMS_PER_RUN = 1
 POSTS_META_PATH = "posts_meta.json"
 DEBATE_META_PATH = "weekly_debate.json"
