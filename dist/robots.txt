@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://hallyuzine.koo1000.com/sitemap.xml
