@@ -1,5 +1,5 @@
 """
-builder.py - HALLYUZINE 영문 매거진 생성 및 정적 HTML 조립 엔진
+builder.py - HALLYUZINE 영문 브로드시트 매거진 생성 및 정적 HTML 조립 엔진
 """
 
 import os
@@ -22,19 +22,19 @@ def load_template(filename: str) -> str:
         return f.read()
 
 
-def load_posts_meta() -> list[dict]:
-    if not os.path.exists(config.POSTS_META_PATH):
-        return []
-    with open(config.POSTS_META_PATH, "r", encoding="utf-8") as f:
+def load_json(path: str, default):
+    if not os.path.exists(path):
+        return default
+    with open(path, "r", encoding="utf-8") as f:
         try:
             return json.load(f)
         except json.JSONDecodeError:
-            return []
+            return default
 
 
-def save_posts_meta(posts: list[dict]) -> None:
-    with open(config.POSTS_META_PATH, "w", encoding="utf-8") as f:
-        json.dump(posts, f, ensure_ascii=False, indent=2)
+def save_json(path: str, data) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 def slugify(text: str) -> str:
@@ -43,20 +43,30 @@ def slugify(text: str) -> str:
     return clean[:65] if clean else f"issue-{int(time.time())}"
 
 
-def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | None:
-    """
-    config.GEMINI_MODEL 단일 모델로 영문 매거진 기사를 생성합니다.
-    별도 스킵 필터 없이 즉시 변환하며, 실패 시 3초 대기 후 최대 2회 시도합니다.
-    """
-    prompt = f"""
-You are a senior editor at HALLYUZINE, a global digital magazine covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
+def get_balanced_category_order(posts: list[dict]) -> list[str]:
+    counts = {cat: 0 for cat in config.CATEGORIES.keys()}
+    for p in posts:
+        cat = p.get("category")
+        if cat in counts:
+            counts[cat] += 1
+    return sorted(counts.keys(), key=lambda c: counts[c])
 
-Transform the following Korean news source into an original, authoritative, magazine-grade English feature article.
-Return ONLY a valid JSON object with the exact keys below:
+
+def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | None:
+    prompt = f"""
+You are a senior editor at HALLYUZINE, a global digital broadsheet covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
+
+First, evaluate if this Korean news source is genuinely relevant and exciting to international K-Culture fans (K-Pop, K-Drama, movies, actors, idols, fashion, Seoul trends).
+If it is domestic Korean broadcasting regulation, politics, corporate stock filing, or local administrative news with zero global fan appeal, return ONLY:
+{{"skip": true}}
+
+Otherwise, transform it into an original, authoritative, magazine-grade English feature article and return ONLY a valid JSON object with these exact keys:
 {{
+  "skip": false,
   "category": "Choose strictly one of: music, ott, style, culture",
-  "title": "Punchy, sophisticated magazine headline in English (max 85 chars)",
+  "title": "Punchy, sophisticated broadsheet headline in English (max 85 chars)",
   "subtitle": "Compelling 1-sentence editorial deck summarizing why this matters globally (max 150 chars)",
+  "buzz_score": 92,
   "dossier_facts": [
     "Fact 1: Key release date, platform, or official title",
     "Fact 2: Artists, cast, directors, or luxury brands involved",
@@ -64,6 +74,11 @@ Return ONLY a valid JSON object with the exact keys below:
   ],
   "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h3> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <h2>, <html>, or markdown."
 }}
+
+Note on buzz_score: Rate global K-culture buzz potential as an integer between 82 and 99.
+
+[SUGGESTED CATEGORY]
+{candidate['category']}
 
 [SOURCE TITLE]
 {candidate['raw_title']}
@@ -82,15 +97,99 @@ Return ONLY a valid JSON object with the exact keys below:
                 ),
             )
             data = json.loads(response.text)
+            if data.get("skip") is True:
+                print(f"[Gemini] 해외 독자 무관 기사 스킵: {candidate['raw_title']}", flush=True)
+                return None
+
             if data.get("category") not in config.CATEGORIES:
                 data["category"] = candidate["category"]
-            print(f"[Gemini] 생성 성공 ({config.GEMINI_MODEL}): {data['title']}", flush=True)
+
+            score = int(data.get("buzz_score", 88))
+            data["buzz_score"] = max(80, min(99, score))
+            print(f"[Gemini] 생성 성공 [{data['category'].upper()}] (Buzz {data['buzz_score']}): {data['title']}", flush=True)
             return data
         except Exception as e:
             print(f"[Gemini] 재시도 ({attempt + 1}/2) - {candidate['raw_title']}: {e}", flush=True)
             time.sleep(3)
 
     return None
+
+
+def update_weekly_debate(client: genai.Client, posts: list[dict], now_kst: datetime) -> dict:
+    week_key = now_kst.strftime("%Y-W%W")
+    debate = load_json(config.DEBATE_META_PATH, {})
+
+    if debate.get("week_key") == week_key and debate.get("question"):
+        return debate
+
+    if len(posts) < 2:
+        return {
+            "week_key": week_key,
+            "question": "Which K-Culture wave defines this week in Seoul?",
+            "option_a_label": "4th & 5th Gen K-Pop Comebacks",
+            "option_a_sub": "Chart-topping singles & world tours",
+            "option_a_img": posts[0]["image_url"] if posts else "",
+            "option_a_pct": 54,
+            "option_b_label": "Global K-Drama & OTT Blockbusters",
+            "option_b_sub": "Netflix & Disney+ weekend binge hits",
+            "option_b_img": posts[1]["image_url"] if len(posts) > 1 else "",
+            "option_b_pct": 46
+        }
+
+    top_a, top_b = posts[0], posts[1]
+    prompt = f"""
+Create a fun, engaging "Weekly K-Culture Balance Game" (A vs B fan poll) for international HALLYUZINE readers inspired by these two trending Seoul stories:
+Story A: {top_a['title']} ({top_a['category_label']})
+Story B: {top_b['title']} ({top_b['category_label']})
+
+Return ONLY valid JSON:
+{{
+  "question": "Punchy either/or question for global K-culture fans (max 75 chars)",
+  "option_a_label": "Short Option A title (max 34 chars)",
+  "option_a_sub": "Short context tag (max 42 chars)",
+  "option_b_label": "Short Option B title (max 34 chars)",
+  "option_b_sub": "Short context tag (max 42 chars)"
+}}
+"""
+    try:
+        resp = client.models.generate_content(
+            model=config.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.75,
+            ),
+        )
+        ai_debate = json.loads(resp.text)
+        debate = {
+            "week_key": week_key,
+            "question": ai_debate["question"],
+            "option_a_label": ai_debate["option_a_label"],
+            "option_a_sub": ai_debate["option_a_sub"],
+            "option_a_img": top_a["image_url"],
+            "option_a_pct": 53,
+            "option_b_label": ai_debate["option_b_label"],
+            "option_b_sub": ai_debate["option_b_sub"],
+            "option_b_img": top_b["image_url"],
+            "option_b_pct": 47
+        }
+        save_json(config.DEBATE_META_PATH, debate)
+        print(f"[Debate] 주간 밸런스 게임 갱신 완료 ({week_key}): {debate['question']}", flush=True)
+        return debate
+    except Exception as e:
+        print(f"[Debate] 기본 투표 위젯 사용: {e}", flush=True)
+        return {
+            "week_key": week_key,
+            "question": "Which Seoul headline owns your weekend watchlist?",
+            "option_a_label": top_a["title"][:34],
+            "option_a_sub": top_a["category_label"],
+            "option_a_img": top_a["image_url"],
+            "option_a_pct": 52,
+            "option_b_label": top_b["title"][:34],
+            "option_b_sub": top_b["category_label"],
+            "option_b_img": top_b["image_url"],
+            "option_b_pct": 48
+        }
 
 
 def render_header(
@@ -140,15 +239,18 @@ def build_site() -> None:
         api_key=api_key,
         http_options=types.HttpOptions(timeout=30000),
     )
-    posts = load_posts_meta()
+    posts = load_json(config.POSTS_META_PATH, [])
     existing_urls = {p["source_url"] for p in posts}
+    existing_titles = [p.get("raw_title", p["title"]) for p in posts]
 
     now_kst = datetime.now(KST)
-    issue_date_str = now_kst.strftime("%b %d, %Y").upper()
+    issue_date_str = now_kst.strftime("%A, %B %d, %Y").upper()
     current_year = str(now_kst.year)
 
-    print("[Builder] 신규 국내 공식 소스 탐색 시작...", flush=True)
-    candidates = parser.fetch_rss_candidates(existing_urls)
+    preferred_cats = get_balanced_category_order(posts)
+    print(f"[Builder] 카테고리 우선순위 (적은 순): {preferred_cats}", flush=True)
+
+    candidates = parser.fetch_rss_candidates(existing_urls, existing_titles, preferred_cats)
     print(f"[Builder] 수집된 유효 후보 기사 수: {len(candidates)}건", flush=True)
 
     created_count = 0
@@ -156,10 +258,10 @@ def build_site() -> None:
         if created_count >= config.ITEMS_PER_RUN:
             break
 
-        print(f"[Builder] 영문 매거진 변환 중 ({created_count + 1}/{config.ITEMS_PER_RUN}): {cand['raw_title']}", flush=True)
+        print(f"[Builder] 영문 기사 변환 시도: {cand['raw_title']}", flush=True)
         ai_data = generate_editorial_article(client, cand)
         if not ai_data:
-            time.sleep(3)
+            time.sleep(2)
             continue
 
         cat_key = ai_data["category"]
@@ -172,41 +274,44 @@ def build_site() -> None:
             "category": cat_key,
             "category_label": cat_info["label"],
             "category_slug": cat_info["slug"],
+            "raw_title": cand["raw_title"],
             "title": ai_data["title"],
             "subtitle": ai_data["subtitle"],
+            "buzz_score": ai_data.get("buzz_score", 90),
             "dossier_facts": ai_data.get("dossier_facts", []),
             "body_html": ai_data["body_html"],
             "image_url": cand["image_url"],
             "image_credit": cand["image_credit"],
             "source_url": cand["source_url"],
             "published_iso": now_kst.isoformat(),
-            "published_display": now_kst.strftime("%B %d, %Y")
+            "published_display": now_kst.strftime("%b %d, %Y").upper()
         }
 
         posts.insert(0, post_record)
         existing_urls.add(cand["source_url"])
         created_count += 1
-
-        time.sleep(3)
+        time.sleep(2)
 
     posts = posts[:120]
-    save_posts_meta(posts)
+    save_json(config.POSTS_META_PATH, posts)
 
     if os.path.exists(config.OUTPUT_DIR):
         shutil.rmtree(config.OUTPUT_DIR)
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
 
     if not posts:
-        print("[Builder] 발행할 기사가 없어 기본 빈 페이지만 생성합니다.", flush=True)
+        print("[Builder] 발행할 기사가 없어 빌드를 종료합니다.", flush=True)
         return
+
+    debate = update_weekly_debate(client, posts, now_kst)
 
     # 1. 개별 기사 상세 페이지(article.html) 빌드
     article_tpl = load_template("article.html")
     for idx, post in enumerate(posts):
         next_post = posts[(idx + 1) % len(posts)]
-        related_posts = [p for p in posts if p["slug"] != post["slug"]][:4]
+        related_posts = [p for p in posts if p["slug"] != post["slug"]][:5]
 
-        dossier_items = "\n".join([f"<li>{fact}</li>" for fact in post["dossier_facts"]])
+        dossier_items = "\n".join([f"<li>{fact}</li>" for fact in post.get("dossier_facts", [])])
         dossier_html = f"<ul>{dossier_items}</ul>"
 
         next_card_html = f"""
@@ -215,7 +320,7 @@ def build_site() -> None:
             <img src="{next_post['image_url']}" alt="{next_post['title']}" loading="lazy" />
           </div>
           <div>
-            <div class="next-issue-kicker">NEXT ISSUE &rarr; {next_post['category_label']}</div>
+            <div class="next-issue-kicker">NEXT DISPATCH &rarr; {next_post['category_label']}</div>
             <h3 class="next-issue-title">{next_post['title']}</h3>
           </div>
         </a>
@@ -224,7 +329,7 @@ def build_site() -> None:
         sidebar_html = "\n".join([
             f"""
             <a href="{rp['slug']}" class="sidebar-item">
-              <span class="cat-tag">{rp['category_label']}</span>
+              <span class="cat-tag">{rp['category_label']} • BUZZ {rp.get('buzz_score', 88)}</span>
               <h3 class="sidebar-item-title">{rp['title']}</h3>
             </a>
             """
@@ -295,7 +400,7 @@ def build_site() -> None:
                 <img src="{p['image_url']}" alt="{p['title']}" loading="lazy" />
               </div>
               <div class="cat-card-body">
-                <span class="cat-tag">{p['category_label']}</span>
+                <span class="cat-tag">{p['category_label']} • BUZZ {p.get('buzz_score', 88)}</span>
                 <h2 class="cat-card-title">{p['title']}</h2>
                 <p class="cat-card-excerpt">{p['subtitle']}</p>
                 <div class="cat-card-date">{p['published_display']}</div>
@@ -327,63 +432,130 @@ def build_site() -> None:
         with open(os.path.join(config.OUTPUT_DIR, cat_info["slug"]), "w", encoding="utf-8") as f:
             f.write(page_html)
 
-    # 3. 메인 커버 페이지(index.html) 빌드
+    # 3. 메인 브로드시트 커버 페이지(index.html) 빌드 (#01 ~ #20 랭킹 + 주간 밸런스 게임)
     index_tpl = load_template("index.html")
-    cover_post = posts[0]
-    featured_posts = posts[1:7] if len(posts) > 1 else posts[:3]
-    latest_posts = posts[7:25] if len(posts) > 7 else posts
+    ranked_posts = posts[:20]
 
-    hero_html = f"""
-    <a href="{cover_post['slug']}" class="hero-cover">
-      <img src="{cover_post['image_url']}" alt="{cover_post['title']}" />
-      <div class="hero-overlay">
-        <span class="hero-kicker">COVER STORY • {cover_post['category_label']}</span>
-        <h1 class="hero-title">{cover_post['title']}</h1>
-        <p class="hero-excerpt">{cover_post['subtitle']}</p>
-        <div class="hero-meta">{cover_post['published_display']} • READ FEATURE &rarr;</div>
+    # #01 톱기사
+    p1 = ranked_posts[0]
+    rank_01_html = f"""
+    <article class="lead-story">
+      <div class="lead-meta-row">
+        <span class="rank-pill">#01 TOP BUZZ</span>
+        <span class="cat-tag">{p1['category_label']} • SCORE {p1.get('buzz_score', 96)}</span>
+        <span class="lead-date">{p1['published_display']}</span>
       </div>
-    </a>
+      <a href="{p1['slug']}" class="lead-link">
+        <h1 class="lead-title">{p1['title']}</h1>
+        <p class="lead-deck">{p1['subtitle']}</p>
+        <div class="lead-media">
+          <img src="{p1['image_url']}" alt="{p1['title']}" />
+        </div>
+      </a>
+    </article>
     """
 
-    swipe_html = "\n".join([
+    # #02 ~ #05 2단 칼럼 랭킹
+    rank_02_05_html = "\n".join([
         f"""
-        <a href="{p['slug']}" class="swipe-card">
-          <div class="card-thumb">
+        <a href="{p['slug']}" class="sub-rank-card">
+          <div class="sub-rank-thumb">
             <img src="{p['image_url']}" alt="{p['title']}" loading="lazy" />
           </div>
-          <div class="card-body">
-            <span class="cat-tag">{p['category_label']}</span>
-            <h3 class="card-title">{p['title']}</h3>
-            <p class="card-summary">{p['subtitle']}</p>
-            <div class="card-date">{p['published_display']}</div>
+          <div class="sub-rank-body">
+            <div class="sub-rank-head">
+              <span class="rank-num">{idx:02d}</span>
+              <span class="cat-tag">{p['category_label']} • BUZZ {p.get('buzz_score', 90)}</span>
+            </div>
+            <h2 class="sub-rank-title">{p['title']}</h2>
+            <p class="sub-rank-deck">{p['subtitle']}</p>
           </div>
         </a>
         """
-        for p in featured_posts
+        for idx, p in enumerate(ranked_posts[1:5], start=2)
     ])
 
-    latest_html = "\n".join([
-        f"""
-        <a href="{p['slug']}" class="news-row">
-          <div class="news-row-thumb">
+    # 주간 밸런스 게임 (딥 블랙 박스)
+    debate_html = f"""
+    <section class="debate-box" aria-label="Weekly K-Culture Balance Game">
+      <div class="debate-top">
+        <span class="debate-kicker">WEEKLY K-CULTURE BALANCE GAME</span>
+        <span class="debate-week">{debate['week_key']}</span>
+      </div>
+      <h2 class="debate-question">{debate['question']}</h2>
+      <div class="debate-grid" id="debateGrid" data-week="{debate['week_key']}" data-pct-a="{debate['option_a_pct']}" data-pct-b="{debate['option_b_pct']}">
+        <button type="button" class="debate-option" data-choice="A">
+          <div class="debate-thumb">
+            <img src="{debate['option_a_img']}" alt="{debate['option_a_label']}" loading="lazy" />
+            <span class="debate-badge">PICK A</span>
+          </div>
+          <div class="debate-info">
+            <div class="debate-opt-title">{debate['option_a_label']}</div>
+            <div class="debate-opt-sub">{debate['option_a_sub']}</div>
+            <div class="debate-bar-wrap"><div class="debate-bar" id="barA" style="width: 0%"></div></div>
+            <div class="debate-pct" id="pctA">VOTE TO SEE RESULT</div>
+          </div>
+        </button>
+
+        <button type="button" class="debate-option" data-choice="B">
+          <div class="debate-thumb">
+            <img src="{debate['option_b_img']}" alt="{debate['option_b_label']}" loading="lazy" />
+            <span class="debate-badge">PICK B</span>
+          </div>
+          <div class="debate-info">
+            <div class="debate-opt-title">{debate['option_b_label']}</div>
+            <div class="debate-opt-sub">{debate['option_b_sub']}</div>
+            <div class="debate-bar-wrap"><div class="debate-bar" id="barB" style="width: 0%"></div></div>
+            <div class="debate-pct" id="pctB">VOTE TO SEE RESULT</div>
+          </div>
+        </button>
+      </div>
+    </section>
+    """
+
+    def render_rank_row(idx: int, p: dict) -> str:
+        return f"""
+        <a href="{p['slug']}" class="rank-row">
+          <div class="rank-row-num">{idx:02d}</div>
+          <div class="rank-row-thumb">
             <img src="{p['image_url']}" alt="{p['title']}" loading="lazy" />
           </div>
-          <div>
-            <span class="cat-tag">{p['category_label']}</span>
-            <h3 class="news-row-title">{p['title']}</h3>
-            <div class="news-row-meta">{p['published_display']}</div>
+          <div class="rank-row-content">
+            <div class="rank-row-meta">
+              <span class="cat-tag">{p['category_label']}</span>
+              <span>• BUZZ {p.get('buzz_score', 86)}</span>
+              <span>• {p['published_display']}</span>
+            </div>
+            <h3 class="rank-row-title">{p['title']}</h3>
           </div>
         </a>
         """
-        for p in latest_posts
+
+    rank_06_10_html = "\n".join([
+        render_rank_row(idx, p) for idx, p in enumerate(ranked_posts[5:10], start=6)
     ])
+
+    rank_11_20_items = "\n".join([
+        render_rank_row(idx, p) for idx, p in enumerate(ranked_posts[10:20], start=11)
+    ])
+
+    rank_11_20_block = ""
+    if rank_11_20_items:
+        rank_11_20_block = f"""
+        <div id="moreRanksBox" class="more-ranks-hidden">
+          {rank_11_20_items}
+        </div>
+        <div class="load-more-wrap">
+          <button type="button" id="toggleRanksBtn" class="load-more-btn">LOAD RANKS #11 &ndash; #20 &darr;</button>
+        </div>
+        """
 
     header_html = render_header(
         page_title=f"{config.SITE_NAME} — {config.SITE_TAGLINE}",
         meta_desc=config.SITE_TAGLINE,
         canonical_url=f"{config.SITE_URL}/",
         og_type="website",
-        og_image=cover_post["image_url"],
+        og_image=p1["image_url"],
         active_nav="home",
         issue_date=issue_date_str
     )
@@ -392,9 +564,11 @@ def build_site() -> None:
     index_html = index_tpl
     index_html = index_html.replace("<!--{{BASE_HEADER}}-->", header_html)
     index_html = index_html.replace("<!--{{BASE_FOOTER}}-->", footer_html)
-    index_html = index_html.replace("<!--{{HERO_COVER}}-->", hero_html)
-    index_html = index_html.replace("<!--{{FEATURED_SWIPE_CARDS}}-->", swipe_html)
-    index_html = index_html.replace("<!--{{LATEST_FEED}}-->", latest_html)
+    index_html = index_html.replace("<!--{{RANK_01_LEAD}}-->", rank_01_html)
+    index_html = index_html.replace("<!--{{RANK_02_05_GRID}}-->", rank_02_05_html)
+    index_html = index_html.replace("<!--{{WEEKLY_DEBATE_BOX}}-->", debate_html)
+    index_html = index_html.replace("<!--{{RANK_06_10_LIST}}-->", rank_06_10_html)
+    index_html = index_html.replace("<!--{{RANK_11_20_ACCORDION}}-->", rank_11_20_block)
 
     with open(os.path.join(config.OUTPUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
