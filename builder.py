@@ -56,8 +56,8 @@ def generate_editorial_article(client: genai.Client, candidate: dict) -> dict | 
     prompt = f"""
 You are a senior editor at HALLYUZINE, a global digital broadsheet covering K-Pop, K-Drama, Korean cinema, fashion, and Seoul lifestyle for international English-speaking readers.
 
-First, evaluate if this news topic is genuinely relevant and exciting to international K-Culture fans (K-Pop, K-Drama, movies, actors, idols, fashion, Seoul trends).
-If it is domestic Korean broadcasting regulation, politics, corporate stock filing, or local administrative news with zero global fan appeal, return ONLY:
+First, evaluate if this news topic is genuinely positive, cultural, or exciting to international K-Culture fans (music releases, tours, dramas, films, actors, fashion, Seoul trends).
+If it is domestic Korean broadcasting regulation, politics, crime/police reports, fan-security disputes, or sports news with zero K-Culture appeal, return ONLY:
 {{"skip": true}}
 
 Otherwise, transform it into an original, authoritative, magazine-grade English feature article and return ONLY a valid JSON object with these exact keys:
@@ -110,8 +110,8 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
             print(f"[Gemini] 생성 성공 ({model_name}) [{data['category'].upper()}] (Buzz {data['buzz_score']}): {data['title']}", flush=True)
             return data
         except Exception as e:
-            print(f"[Gemini] 모델 전환 ({model_name} 실패) - {candidate['raw_title']}: {e}", flush=True)
-            time.sleep(2)
+            print(f"[Gemini] 모델 지연/전환 ({model_name}) - {candidate['raw_title']}: {e}", flush=True)
+            time.sleep(10)
 
     return None
 
@@ -181,7 +181,7 @@ Return ONLY valid JSON:
             return debate
         except Exception as e:
             print(f"[Debate] 모델 전환 ({model_name} 실패): {e}", flush=True)
-            time.sleep(2)
+            time.sleep(5)
 
     return {
         "week_key": week_key,
