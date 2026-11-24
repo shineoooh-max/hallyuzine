@@ -8,7 +8,7 @@
 
   @media (min-width: 1024px) {
     .article-layout {
-      grid-template-columns: 1fr 340px;
+      grid-template-columns: 1fr 330px;
     }
   }
 
@@ -18,7 +18,7 @@
 
   @media (min-width: 1024px) {
     .article-main {
-      padding: 2.5rem 3rem 3.5rem;
+      padding: 2.5rem 2.75rem 3.5rem;
       border-right: var(--border-thin);
     }
   }
@@ -71,7 +71,6 @@
     letter-spacing: 0.04em;
   }
 
-  /* THE DOSSIER: 핵심 팩트 요약 박스 */
   .dossier-box {
     border: var(--border-thick);
     background-color: var(--paper-card);
@@ -112,7 +111,6 @@
     margin-bottom: 0.4rem;
   }
 
-  /* 웹툰/스토리식 챕터 호흡 본문 */
   .article-body {
     font-size: 1.03rem;
     line-height: 1.78;
@@ -141,7 +139,6 @@
     color: var(--ink-muted);
   }
 
-  /* 본문 끝 & 푸터 위 지면 고정형 NEXT ISSUE 블록 */
   .next-issue-block {
     display: grid;
     grid-template-columns: 96px 1fr;
@@ -155,7 +152,7 @@
   }
 
   .next-issue-block:hover {
-    background-color: #E2DDD0;
+    background-color: #E4E0D5;
   }
 
   .next-issue-thumb {
@@ -188,7 +185,6 @@
     margin: 0;
   }
 
-  /* 데스크톱 사이드바 */
   .article-sidebar {
     padding: 1.75rem 1.25rem;
     background-color: var(--paper-bg);
@@ -196,13 +192,13 @@
 
   .sidebar-sticky {
     position: sticky;
-    top: 6.2rem;
+    top: 4rem;
   }
 
   .sidebar-title {
     font-family: var(--font-serif);
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     padding-bottom: 0.6rem;
@@ -237,7 +233,7 @@
         <a href="<!--{{CATEGORY_SLUG}}-->" class="cat-tag"><!--{{CATEGORY_LABEL}}--></a>
         <h1 class="article-title"><!--{{ARTICLE_TITLE}}--></h1>
         <p class="article-subtitle"><!--{{ARTICLE_SUBTITLE}}--></p>
-        <div class="article-byline">BY HALLYUZINE EDITORIAL DESK • <!--{{PUBLISHED_DATE}}--></div>
+        <div class="article-byline">BY HALLYUZINE SEOUL DESK • <!--{{PUBLISHED_DATE}}--></div>
       </header>
 
       <figure class="article-hero-figure">
@@ -245,7 +241,6 @@
         <figcaption class="article-hero-caption"><!--{{IMAGE_CREDIT}}--></figcaption>
       </figure>
 
-      <!-- 상단 요약 카드: THE DOSSIER -->
       <section class="dossier-box" aria-label="Key Facts Summary">
         <div class="dossier-header">
           <span>THE DOSSIER: KEY FACTS</span>
@@ -254,58 +249,23 @@
         <!--{{DOSSIER_LIST}}-->
       </section>
 
-      <!-- [ADSENSE SLOT 1: Fact Box 하단 비침해형 인아티클 광고 - 승인 전 비노출]
-      <div style="margin: 1.5rem 0; border: 1px solid #141414; padding: 0.5rem; background: #ECE8DE;">
-        <ins class="adsbygoogle"
-             style="display:block; text-align:center;"
-             data-ad-layout="in-article"
-             data-ad-format="fluid"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="1234567890"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      </div>
-      -->
-
-      <!-- 본문 챕터 콘텐츠 -->
       <div class="article-body">
         <!--{{ARTICLE_BODY}}-->
       </div>
 
       <div class="article-source-note">
-        Editorial reporting compiled and adapted for global readers. <!--{{IMAGE_CREDIT}}-->
+        Editorial reporting compiled and adapted in English for global readers. <!--{{IMAGE_CREDIT}}-->
       </div>
 
-      <!-- [ADSENSE SLOT 2: 본문 종료 후 멀티플렉스 추천 광고 - 승인 전 비노출]
-      <div style="margin-top: 2rem; border-top: 1px solid #141414; padding-top: 1.25rem;">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-format="autorelaxed"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="3456789012"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      </div>
-      -->
-
-      <!-- 푸터 바로 위 지면 고정형 NEXT ISSUE 카드 블록 -->
       <!--{{NEXT_ISSUE_CARD}}-->
     </article>
 
     <aside class="article-sidebar">
       <div class="sidebar-sticky">
-        <h2 class="sidebar-title">More in Seoul</h2>
+        <h2 class="sidebar-title">Trending in Seoul</h2>
         <div class="sidebar-list">
           <!--{{SIDEBAR_RELATED}}-->
         </div>
-
-        <!-- [ADSENSE SLOT 3: 데스크톱 사이드바 300x600 고정 배너 - 승인 전 비노출]
-        <div style="margin-top: 1.5rem; border: 1px solid #141414; padding: 0.5rem; background: #ECE8DE;">
-          <ins class="adsbygoogle"
-               style="display:inline-block;width:300px;height:600px"
-               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-               data-ad-slot="2345678901"></ins>
-          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-        </div>
-        -->
       </div>
     </aside>
   </div>
