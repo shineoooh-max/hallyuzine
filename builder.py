@@ -95,6 +95,9 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.65,
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level=types.ThinkingLevel.LOW
+                    ),
                 ),
             )
             data = json.loads(response.text)
@@ -161,6 +164,9 @@ Return ONLY valid JSON:
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.75,
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level=types.ThinkingLevel.LOW
+                    ),
                 ),
             )
             ai_debate = json.loads(resp.text)
