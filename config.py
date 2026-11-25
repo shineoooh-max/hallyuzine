@@ -9,7 +9,7 @@ SITE_URL = "https://hallyuzine.pages.dev"
 LANGUAGE = "en"
 
 # 2. Gemini 모델 설정 (메인 모델 + 503 과부하 시 자동 폴백 모델)
-GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_MODEL = "gemini-4-hydrogen"
 GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite"
 
 # 3. 4대 핵심 카테고리 및 전용 서브페이지 파일명 매핑
