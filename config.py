@@ -36,27 +36,23 @@ CATEGORIES = {
     }
 }
 
-# 4. 코리아타임스·한국경제 공식 연예/문화 RSS 피드
+# 4. 코리아타임스·한국경제 공식 연예/문화 통합 RSS 피드 (카테고리는 기사 내용 기반으로 자동 분류)
 RSS_FEEDS = [
     {
-        "category": "music",
         "url": "https://www.hankyung.com/feed/entertainment",
-        "source_name": "Korea Economic Daily"
+        "source_name": "Korea Economic Daily (Entertainment)"
     },
     {
-        "category": "ott",
-        "url": "https://feed.koreatimes.co.kr/k/entertainment.xml",
-        "source_name": "The Korea Times"
-    },
-    {
-        "category": "style",
         "url": "https://www.hankyung.com/feed/life",
-        "source_name": "Korea Economic Daily"
+        "source_name": "Korea Economic Daily (Life)"
     },
     {
-        "category": "culture",
+        "url": "https://feed.koreatimes.co.kr/k/entertainment.xml",
+        "source_name": "The Korea Times (Entertainment)"
+    },
+    {
         "url": "https://feed.koreatimes.co.kr/k/lifestyle.xml",
-        "source_name": "The Korea Times"
+        "source_name": "The Korea Times (Lifestyle)"
     }
 ]
 
@@ -67,7 +63,7 @@ ADSENSE_SLOT_SIDEBAR_FIXED = "2345678901"
 ADSENSE_SLOT_MULTIPLEX_END = "3456789012"
 
 # 6. 발행 및 빌드 제어
-ITEMS_PER_RUN = 3
+ITEMS_PER_RUN = 1
 POSTS_META_PATH = "posts_meta.json"
 DEBATE_META_PATH = "weekly_debate.json"
 OUTPUT_DIR = "dist"

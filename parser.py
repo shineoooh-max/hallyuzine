@@ -33,6 +33,45 @@ DEFAULT_CATEGORY_IMAGES = {
     "culture": "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
 }
 
+CATEGORY_KEYWORDS = {
+    "music": [
+        "케이팝", "k-pop", "kpop", "아이돌", "걸그룹", "보이그룹", "음반", "앨범", "신곡",
+        "컴백", "빌보드", "스포티파이", "콘서트", "월드투어", "투어", "뮤직비디오", "음원",
+        "차트", "가수", "싱어송라이터", "밴드", "힙합", "페스티벌", "데뷔", "팬미팅", "버추얼",
+        "album", "comeback", "billboard", "spotify", "concert", "tour", "single", "idol", "singer", "band", "music"
+    ],
+    "ott": [
+        "넷플릭스", "디즈니+", "디즈니플러스", "티빙", "쿠팡플레이", "웨이브", "드라마", "영화",
+        "박스오피스", "배우", "주연", "개봉", "시사회", "영화제", "영화상", "청룡", "백상",
+        "시청률", "시리즈", "예능", "방송", "극장", "오스카", "칸", "어벤져스",
+        "netflix", "disney", "drama", "film", "movie", "cinema", "box office", "actor", "actress", "series", "cast", "premiere"
+    ],
+    "style": [
+        "패션", "화보", "공항패션", "앰버서더", "앰배서더", "명품", "브랜드", "컬렉션", "패션위크",
+        "뷰티", "화장품", "메이크업", "스킨케어", "올리브영", "스타일링", "룩북", "런웨이", "모델", "향수", "주얼리",
+        "fashion", "beauty", "luxury", "ambassador", "couture", "runway", "style", "skincare", "makeup", "cosmetic", "brand"
+    ],
+    "culture": [
+        "성수", "팝업", "팝업스토어", "전시", "박물관", "미술관", "한류", "k-컬처", "k컬처",
+        "서울", "여행", "관광", "한식", "푸드", "카페", "디저트", "축제", "전통", "사찰", "책", "출판", "라이프스타일",
+        "seoul", "popup", "pop-up", "exhibition", "museum", "hallyu", "k-culture", "culture", "food", "cuisine", "travel", "lifestyle", "mindfulness"
+    ],
+}
+
+
+def classify_category(title: str, body: str) -> str:
+    title_l = title.lower()
+    body_l = body.lower()
+    scores = {cat: 0 for cat in CATEGORY_KEYWORDS}
+    for cat, keywords in CATEGORY_KEYWORDS.items():
+        for kw in keywords:
+            if kw in title_l:
+                scores[cat] += 2
+            elif kw in body_l:
+                scores[cat] += 1
+    best_cat = max(scores, key=lambda c: scores[c])
+    return best_cat if scores[best_cat] > 0 else "culture"
+
 
 def tokenize_title(title: str) -> set[str]:
     clean = re.sub(r"\[.*?\]|\(.*?\)|[^가-힣a-zA-Z0-9\s]", " ", title.lower())
@@ -116,17 +155,10 @@ def extract_rss_image(item: ET.Element, body_html: str, category: str, article_u
 
 
 def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferred_categories: list[str]) -> list[dict]:
-    candidates = []
+    raw_candidates = []
     seen_titles = list(existing_titles)
 
-    cat_priority = {cat: idx for idx, cat in enumerate(preferred_categories)}
-    sorted_feeds = sorted(config.RSS_FEEDS, key=lambda f: cat_priority.get(f["category"], 99))
-
-    for feed in sorted_feeds:
-        if len(candidates) >= 10:
-            break
-
-        category = feed["category"]
+    for feed in config.RSS_FEEDS:
         rss_url = feed["url"]
         source_name = feed["source_name"]
 
@@ -140,8 +172,7 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
         items = root.findall(".//item")
         feed_picked = 0
         for item in items[:20]:
-            # 피드당 최대 4건, 전체 최대 10건 확보
-            if feed_picked >= 4 or len(candidates) >= 10:
+            if feed_picked >= 6:
                 break
 
             title_el = item.find("title")
@@ -171,19 +202,38 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
             if len(raw_text) < 25:
                 continue
 
-            image_url = extract_rss_image(item, desc_raw, category, link)
-
-            print(f"[Parser] 후보 확보 [{category.upper()}] ({source_name}): {raw_title} | IMG: {image_url}", flush=True)
+            category = classify_category(raw_title, clean_desc)
             seen_titles.insert(0, raw_title)
-            candidates.append({
+            raw_candidates.append({
+                "item": item,
+                "desc_raw": desc_raw,
                 "category": category,
                 "raw_title": raw_title,
                 "source_url": link,
                 "source_name": source_name,
                 "raw_text": raw_text[:2500],
-                "image_url": image_url,
-                "image_credit": f"Photo via {source_name}"
             })
             feed_picked += 1
+
+    # 부족한 카테고리 우선순위로 정렬 후 상위 8건에 대해 이미지 추출
+    cat_priority = {cat: idx for idx, cat in enumerate(preferred_categories)}
+    raw_candidates.sort(key=lambda c: cat_priority.get(c["category"], 99))
+
+    candidates = []
+    for rc in raw_candidates[:8]:
+        image_url = extract_rss_image(rc["item"], rc["desc_raw"], rc["category"], rc["source_url"])
+        print(
+            f"[Parser] 후보 확보 [{rc['category'].upper()}] ({rc['source_name']}): {rc['raw_title']} | IMG: {image_url}",
+            flush=True,
+        )
+        candidates.append({
+            "category": rc["category"],
+            "raw_title": rc["raw_title"],
+            "source_url": rc["source_url"],
+            "source_name": rc["source_name"],
+            "raw_text": rc["raw_text"],
+            "image_url": image_url,
+            "image_credit": f"Photo via {rc['source_name']}"
+        })
 
     return candidates
