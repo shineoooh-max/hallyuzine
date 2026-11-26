@@ -126,10 +126,17 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
 
 
 def update_weekly_debate(client: genai.Client, posts: list[dict], now_kst: datetime) -> dict:
-    week_key = now_kst.strftime("%Y-W%W")
+    iso_year, iso_week, _ = now_kst.isocalendar()
+    week_key = f"{iso_year}-W{iso_week:02d}"
     debate = load_json(config.DEBATE_META_PATH, {})
 
+    latest_img_a = posts[0]["image_url"] if posts else ""
+    latest_img_b = posts[1]["image_url"] if len(posts) > 1 else latest_img_a
+
     if debate.get("week_key") == week_key and debate.get("question"):
+        # 최신 기사 대표 이미지 경로로 항상 동기화
+        debate["option_a_img"] = latest_img_a
+        debate["option_b_img"] = latest_img_b
         return debate
 
     if len(posts) < 2:
@@ -353,35 +360,53 @@ def get_post_poll(post: dict) -> dict:
 
 
 def render_clash_widget(debate: dict, variant: str = "main") -> str:
-    poll_id = f"clash-{debate.get('week_key', 'weekly')}"
+    week_key = debate.get("week_key", "weekly")
+    poll_id = f"weekly-{week_key}"
     is_sidebar = variant == "sidebar"
-    wrap_cls = "clash-widget clash-widget--sidebar" if is_sidebar else "clash-widget clash-widget--main"
+    wrap_cls = "debate-dark-box debate-dark-box--sidebar" if is_sidebar else "debate-dark-box debate-dark-box--main"
     return f"""
-    <section class="{wrap_cls} js-live-poll" data-poll-id="{poll_id}" data-poll-type="clash" aria-label="24H Hallyu Clash">
-      <div class="clash-head">
-        <span class="clash-kicker">24H HALLYU CLASH</span>
+    <section class="{wrap_cls} js-live-poll" data-poll-id="{poll_id}" data-poll-type="debate" aria-label="Weekly K-Culture Balance Game">
+      <div class="debate-dark-head">
+        <div class="debate-dark-meta">
+          <span class="debate-dark-kicker">WEEKLY K-CULTURE BALANCE GAME</span>
+          <span class="debate-dark-week">{week_key}</span>
+        </div>
         <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
       </div>
-      <h2 class="clash-question">{debate['question']}</h2>
-      <div class="clash-options">
-        <button type="button" class="clash-btn js-vote-btn" data-choice="A">
-          <div class="clash-btn-top">
-            <span class="clash-opt-label">{debate['option_a_label']}</span>
-            <span class="clash-opt-pct js-pct-a">50%</span>
+      <h2 class="debate-dark-question">{debate['question']}</h2>
+      <div class="debate-dark-grid">
+        <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
+          <div class="debate-dark-thumb">
+            <img src="{debate['option_a_img']}" alt="{debate['option_a_label']}" loading="lazy" />
+            <span class="debate-dark-badge">PICK A</span>
           </div>
-          <div class="clash-bar-track"><div class="clash-bar-fill js-bar-a" style="width: 50%"></div></div>
+          <div class="debate-dark-info">
+            <div class="debate-dark-title">{debate['option_a_label']}</div>
+            <div class="debate-dark-sub">{debate['option_a_sub']}</div>
+            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
+            <div class="debate-dark-pct js-pct-a">50%</div>
+          </div>
         </button>
-        <button type="button" class="clash-btn js-vote-btn" data-choice="B">
-          <div class="clash-btn-top">
-            <span class="clash-opt-label">{debate['option_b_label']}</span>
-            <span class="clash-opt-pct js-pct-b">50%</span>
+
+        <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
+          <div class="debate-dark-thumb">
+            <img src="{debate['option_b_img']}" alt="{debate['option_b_label']}" loading="lazy" />
+            <span class="debate-dark-badge">PICK B</span>
           </div>
-          <div class="clash-bar-track"><div class="clash-bar-fill clash-bar-fill--b js-bar-b" style="width: 50%"></div></div>
+          <div class="debate-dark-info">
+            <div class="debate-dark-title">{debate['option_b_label']}</div>
+            <div class="debate-dark-sub">{debate['option_b_sub']}</div>
+            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
+            <div class="debate-dark-pct js-pct-b">50%</div>
+          </div>
         </button>
       </div>
-      <div class="clash-foot">
+      <div class="debate-dark-foot">
         <span class="js-total-votes">0 LIVE VOTES</span>
-        <span class="clash-status js-vote-status">TAP TO VOTE</span>
+        <span class="js-vote-status">TAP TO VOTE</span>
+      </div>
+      <div class="poll-boost-wrap js-boost-wrap" hidden>
+        <button type="button" class="poll-boost-btn js-boost-btn">Copy Share Link (+3 Power Vote)</button>
       </div>
     </section>
     """
@@ -700,43 +725,8 @@ def build_site() -> None:
         for idx, p in enumerate(ranked_posts[1:5], start=2)
     ])
 
-    # 주간 밸런스 게임 (딥 블랙 박스)
-    debate_html = f"""
-    <section class="debate-box" aria-label="Weekly K-Culture Balance Game">
-      <div class="debate-top">
-        <span class="debate-kicker">WEEKLY K-CULTURE BALANCE GAME</span>
-        <span class="debate-week">{debate['week_key']}</span>
-      </div>
-      <h2 class="debate-question">{debate['question']}</h2>
-      <div class="debate-grid" id="debateGrid" data-week="{debate['week_key']}" data-pct-a="{debate['option_a_pct']}" data-pct-b="{debate['option_b_pct']}">
-        <button type="button" class="debate-option" data-choice="A">
-          <div class="debate-thumb">
-            <img src="{debate['option_a_img']}" alt="{debate['option_a_label']}" loading="lazy" />
-            <span class="debate-badge">PICK A</span>
-          </div>
-          <div class="debate-info">
-            <div class="debate-opt-title">{debate['option_a_label']}</div>
-            <div class="debate-opt-sub">{debate['option_a_sub']}</div>
-            <div class="debate-bar-wrap"><div class="debate-bar" id="barA" style="width: 0%"></div></div>
-            <div class="debate-pct" id="pctA">VOTE TO SEE RESULT</div>
-          </div>
-        </button>
-
-        <button type="button" class="debate-option" data-choice="B">
-          <div class="debate-thumb">
-            <img src="{debate['option_b_img']}" alt="{debate['option_b_label']}" loading="lazy" />
-            <span class="debate-badge">PICK B</span>
-          </div>
-          <div class="debate-info">
-            <div class="debate-opt-title">{debate['option_b_label']}</div>
-            <div class="debate-opt-sub">{debate['option_b_sub']}</div>
-            <div class="debate-bar-wrap"><div class="debate-bar" id="barB" style="width: 0%"></div></div>
-            <div class="debate-pct" id="pctB">VOTE TO SEE RESULT</div>
-          </div>
-        </button>
-      </div>
-    </section>
-    """
+    # 주간 밸런스 게임 (딥 블랙 박스 — 실시간 KV 투표 + NECK AND NECK + Power Vote)
+    debate_html = render_clash_widget(debate, variant="main")
 
     def render_rank_row(idx: int, p: dict) -> str:
         return f"""
@@ -786,12 +776,9 @@ def build_site() -> None:
     )
     footer_html = render_footer(current_year)
 
-    main_clash_html = render_clash_widget(debate, variant="main")
-
     index_html = index_tpl
     index_html = index_html.replace("<!--{{BASE_HEADER}}-->", header_html)
     index_html = index_html.replace("<!--{{BASE_FOOTER}}-->", footer_html)
-    index_html = index_html.replace("<!--{{MAIN_CLASH_WIDGET}}-->", main_clash_html)
     index_html = index_html.replace("<!--{{RANK_01_LEAD}}-->", rank_01_html)
     index_html = index_html.replace("<!--{{RANK_02_05_GRID}}-->", rank_02_05_html)
     index_html = index_html.replace("<!--{{WEEKLY_DEBATE_BOX}}-->", debate_html)

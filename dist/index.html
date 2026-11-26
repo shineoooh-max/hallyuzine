@@ -187,35 +187,50 @@
       font-weight: 800;
     }
 
-    /* 24H HALLYU CLASH & 기사 하단 실시간 투표 위젯 */
-    .clash-widget {
-      background-color: var(--paper-card);
+    /* 24H HALLYU CLASH & 주간 대표 다크 블랙박스 투표 위젯 */
+    .debate-dark-box {
+      background-color: #111111;
+      color: #F7F5F0;
+      padding: 1.75rem 1.25rem;
       border-bottom: var(--border-thick);
-      padding: 1.15rem 1.25rem;
     }
 
-    .clash-widget--sidebar {
+    .debate-dark-box--sidebar {
       border: var(--border-thick);
-      margin-bottom: 1.5rem;
       padding: 1rem;
+      margin-bottom: 1.5rem;
     }
 
-    .clash-head,
+    .debate-dark-head,
     .article-poll-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.6rem;
     }
 
-    .clash-kicker,
+    .debate-dark-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .debate-dark-kicker,
     .article-poll-kicker {
       font-size: 0.68rem;
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--accent-red);
+    }
+
+    .debate-dark-week {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: rgba(247, 245, 240, 0.6);
     }
 
     .clash-neck-badge {
@@ -234,32 +249,164 @@
       50% { opacity: 0.62; }
     }
 
-    .clash-question {
+    .debate-dark-question {
       font-family: var(--font-serif);
-      font-size: 1.15rem;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
       font-weight: 900;
-      line-height: 1.25;
-      margin: 0 0 0.85rem 0;
+      line-height: 1.22;
+      margin: 0 0 1.15rem 0;
     }
 
-    .clash-widget--sidebar .clash-question {
-      font-size: 1rem;
+    .debate-dark-box--sidebar .debate-dark-question {
+      font-size: 1.02rem;
+      margin-bottom: 0.8rem;
     }
 
-    .clash-options {
+    .debate-dark-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 0.55rem;
+      gap: 1rem;
     }
 
     @media (min-width: 720px) {
-      .clash-widget--main .clash-options {
+      .debate-dark-box--main .debate-dark-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 0.85rem;
       }
     }
 
-    .clash-btn,
+    .debate-dark-box--sidebar .debate-dark-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+
+    .debate-dark-card {
+      appearance: none;
+      text-align: left;
+      background-color: #1C1C1C;
+      color: #F7F5F0;
+      border: 1px solid rgba(247, 245, 240, 0.25);
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .debate-dark-card:hover,
+    .debate-dark-card.is-selected {
+      border-color: var(--accent-red);
+      background-color: #242424;
+    }
+
+    .debate-dark-card.is-selected {
+      border-width: 2px;
+    }
+
+    .debate-dark-thumb {
+      position: relative;
+      width: 100%;
+      border-bottom: 1px solid rgba(247, 245, 240, 0.2);
+      overflow: hidden;
+      background-color: #111111;
+    }
+
+    .debate-dark-thumb img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .debate-dark-box--sidebar .debate-dark-thumb img {
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    .debate-dark-badge {
+      position: absolute;
+      top: 0.45rem;
+      left: 0.45rem;
+      background-color: #111111;
+      color: #F7F5F0;
+      border: 1px solid rgba(247, 245, 240, 0.7);
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 0.16rem 0.4rem;
+    }
+
+    .debate-dark-info {
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .debate-dark-box--sidebar .debate-dark-info {
+      padding: 0.55rem;
+    }
+
+    .debate-dark-title {
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.28;
+      margin-bottom: 0.25rem;
+    }
+
+    .debate-dark-box--sidebar .debate-dark-title {
+      font-size: 0.76rem;
+      line-height: 1.25;
+      margin-bottom: 0.35rem;
+    }
+
+    .debate-dark-sub {
+      font-size: 0.76rem;
+      color: rgba(247, 245, 240, 0.68);
+      margin-bottom: 0.7rem;
+    }
+
+    .debate-dark-box--sidebar .debate-dark-sub {
+      display: none;
+    }
+
+    .debate-dark-bar-track {
+      width: 100%;
+      height: 6px;
+      background-color: rgba(247, 245, 240, 0.16);
+      margin-top: auto;
+      margin-bottom: 0.4rem;
+      overflow: hidden;
+    }
+
+    .debate-dark-bar-fill {
+      height: 100%;
+      background-color: var(--accent-red);
+      transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .debate-dark-pct {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #FF4D5A;
+    }
+
+    .debate-dark-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.85rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(247, 245, 240, 0.65);
+    }
+
+    .debate-dark-box .poll-boost-wrap {
+      border-top-color: rgba(247, 245, 240, 0.2);
+    }
+
     .poll-choice-btn {
       appearance: none;
       width: 100%;
@@ -272,19 +419,16 @@
       transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
-    .clash-btn:hover,
     .poll-choice-btn:hover {
       border-color: var(--accent-red);
       background-color: #FFFFFF;
     }
 
-    .clash-btn.is-selected,
     .poll-choice-btn.is-selected {
       border: 2px solid var(--accent-red);
       background-color: #FFFFFF;
     }
 
-    .clash-btn-top,
     .poll-choice-row {
       display: flex;
       justify-content: space-between;
@@ -293,14 +437,12 @@
       margin-bottom: 0.45rem;
     }
 
-    .clash-opt-label,
     .poll-choice-label {
       font-size: 0.84rem;
       font-weight: 700;
       line-height: 1.3;
     }
 
-    .clash-opt-pct,
     .poll-choice-pct {
       font-size: 0.78rem;
       font-weight: 800;
@@ -308,7 +450,6 @@
       white-space: nowrap;
     }
 
-    .clash-bar-track,
     .poll-gauge-track {
       width: 100%;
       height: 6px;
@@ -316,19 +457,16 @@
       overflow: hidden;
     }
 
-    .clash-bar-fill,
     .poll-gauge-fill {
       height: 100%;
       background-color: var(--accent-red);
       transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .clash-bar-fill--b,
     .poll-gauge-fill--b {
       background-color: var(--ink-black);
     }
 
-    .clash-foot,
     .article-poll-foot {
       display: flex;
       justify-content: space-between;
@@ -868,37 +1006,6 @@
 </style>
 
 <main class="container">
-  <!-- 메인 상단 24H HALLYU CLASH -->
-  
-    <section class="clash-widget clash-widget--main js-live-poll" data-poll-id="clash-2026-W47" data-poll-type="clash" aria-label="24H Hallyu Clash">
-      <div class="clash-head">
-        <span class="clash-kicker">24H HALLYU CLASH</span>
-        <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
-      </div>
-      <h2 class="clash-question">Which future of K-Culture are you stanning?</h2>
-      <div class="clash-options">
-        <button type="button" class="clash-btn js-vote-btn" data-choice="A">
-          <div class="clash-btn-top">
-            <span class="clash-opt-label">Global K-Fashion Runways</span>
-            <span class="clash-opt-pct js-pct-a">50%</span>
-          </div>
-          <div class="clash-bar-track"><div class="clash-bar-fill js-bar-a" style="width: 50%"></div></div>
-        </button>
-        <button type="button" class="clash-btn js-vote-btn" data-choice="B">
-          <div class="clash-btn-top">
-            <span class="clash-opt-label">AI Idol Movie Stars</span>
-            <span class="clash-opt-pct js-pct-b">50%</span>
-          </div>
-          <div class="clash-bar-track"><div class="clash-bar-fill clash-bar-fill--b js-bar-b" style="width: 50%"></div></div>
-        </button>
-      </div>
-      <div class="clash-foot">
-        <span class="js-total-votes">0 LIVE VOTES</span>
-        <span class="clash-status js-vote-status">TAP TO VOTE</span>
-      </div>
-    </section>
-    
-
   <!-- #01 톱기사 -->
   
     <article class="lead-story">
@@ -983,38 +1090,48 @@
 
   <!-- 주간 밸런스 게임 (딥 블랙 박스) -->
   
-    <section class="debate-box" aria-label="Weekly K-Culture Balance Game">
-      <div class="debate-top">
-        <span class="debate-kicker">WEEKLY K-CULTURE BALANCE GAME</span>
-        <span class="debate-week">2026-W47</span>
+    <section class="debate-dark-box debate-dark-box--main js-live-poll" data-poll-id="weekly-2026-W48" data-poll-type="debate" aria-label="Weekly K-Culture Balance Game">
+      <div class="debate-dark-head">
+        <div class="debate-dark-meta">
+          <span class="debate-dark-kicker">WEEKLY K-CULTURE BALANCE GAME</span>
+          <span class="debate-dark-week">2026-W48</span>
+        </div>
+        <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
       </div>
-      <h2 class="debate-question">Which future of K-Culture are you stanning?</h2>
-      <div class="debate-grid" id="debateGrid" data-week="2026-W47" data-pct-a="53" data-pct-b="47">
-        <button type="button" class="debate-option" data-choice="A">
-          <div class="debate-thumb">
-            <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80" alt="Global K-Fashion Runways" loading="lazy" />
-            <span class="debate-badge">PICK A</span>
+      <h2 class="debate-dark-question">Which future of K-Culture are you stanning?</h2>
+      <div class="debate-dark-grid">
+        <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
+          <div class="debate-dark-thumb">
+            <img src="https://newsimg.koreatimes.co.kr/2026/11/26/f1463f5c-0b7f-4b77-957d-34c0861c494b.jpg" alt="Global K-Fashion Runways" loading="lazy" />
+            <span class="debate-dark-badge">PICK A</span>
           </div>
-          <div class="debate-info">
-            <div class="debate-opt-title">Global K-Fashion Runways</div>
-            <div class="debate-opt-sub">Jakarta Fashion Week 2027 Style</div>
-            <div class="debate-bar-wrap"><div class="debate-bar" id="barA" style="width: 0%"></div></div>
-            <div class="debate-pct" id="pctA">VOTE TO SEE RESULT</div>
+          <div class="debate-dark-info">
+            <div class="debate-dark-title">Global K-Fashion Runways</div>
+            <div class="debate-dark-sub">Jakarta Fashion Week 2027 Style</div>
+            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
+            <div class="debate-dark-pct js-pct-a">50%</div>
           </div>
         </button>
 
-        <button type="button" class="debate-option" data-choice="B">
-          <div class="debate-thumb">
-            <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80" alt="AI Idol Movie Stars" loading="lazy" />
-            <span class="debate-badge">PICK B</span>
+        <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
+          <div class="debate-dark-thumb">
+            <img src="https://img.hankyung.com/photo/202611/ZN.46554607.1.jpg" alt="AI Idol Movie Stars" loading="lazy" />
+            <span class="debate-dark-badge">PICK B</span>
           </div>
-          <div class="debate-info">
-            <div class="debate-opt-title">AI Idol Movie Stars</div>
-            <div class="debate-opt-sub">Meet Seoria on the Silver Screen</div>
-            <div class="debate-bar-wrap"><div class="debate-bar" id="barB" style="width: 0%"></div></div>
-            <div class="debate-pct" id="pctB">VOTE TO SEE RESULT</div>
+          <div class="debate-dark-info">
+            <div class="debate-dark-title">AI Idol Movie Stars</div>
+            <div class="debate-dark-sub">Meet Seoria on the Silver Screen</div>
+            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
+            <div class="debate-dark-pct js-pct-b">50%</div>
           </div>
         </button>
+      </div>
+      <div class="debate-dark-foot">
+        <span class="js-total-votes">0 LIVE VOTES</span>
+        <span class="js-vote-status">TAP TO VOTE</span>
+      </div>
+      <div class="poll-boost-wrap js-boost-wrap" hidden>
+        <button type="button" class="poll-boost-btn js-boost-btn">Copy Share Link (+3 Power Vote)</button>
       </div>
     </section>
     
@@ -1164,42 +1281,8 @@
 </main>
 
 <script>
-  // 주간 밸런스 게임 클라이언트 투표 처리
+  // #11 ~ #20 랭킹 펼치기 토글
   (function () {
-    const grid = document.getElementById('debateGrid');
-    if (!grid) return;
-    const weekKey = grid.dataset.week;
-    const storageKey = 'hallyuzine_vote_' + weekKey;
-    const baseA = parseInt(grid.dataset.pctA || '52', 10);
-    const baseB = parseInt(grid.dataset.pctB || '48', 10);
-
-    function applyVote(choice) {
-      const finalA = choice === 'A' ? Math.min(95, baseA + 1) : Math.max(5, baseA - 1);
-      const finalB = 100 - finalA;
-      document.getElementById('barA').style.width = finalA + '%';
-      document.getElementById('barB').style.width = finalB + '%';
-      document.getElementById('pctA').textContent = finalA + '% VOTED A' + (choice === 'A' ? ' (YOUR PICK)' : '');
-      document.getElementById('pctB').textContent = finalB + '% VOTED B' + (choice === 'B' ? ' (YOUR PICK)' : '');
-
-      grid.querySelectorAll('.debate-option').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.choice === choice);
-      });
-    }
-
-    const saved = localStorage.getItem(storageKey);
-    if (saved === 'A' || saved === 'B') {
-      applyVote(saved);
-    }
-
-    grid.querySelectorAll('.debate-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const choice = btn.dataset.choice;
-        localStorage.setItem(storageKey, choice);
-        applyVote(choice);
-      });
-    });
-
-    // #11 ~ #20 랭킹 펼치기 토글
     const toggleBtn = document.getElementById('toggleRanksBtn');
     const moreBox = document.getElementById('moreRanksBox');
     if (toggleBtn && moreBox) {

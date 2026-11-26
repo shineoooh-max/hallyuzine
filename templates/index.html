@@ -391,9 +391,6 @@
 </style>
 
 <main class="container">
-  <!-- 메인 상단 24H HALLYU CLASH -->
-  <!--{{MAIN_CLASH_WIDGET}}-->
-
   <!-- #01 톱기사 -->
   <!--{{RANK_01_LEAD}}-->
 
@@ -417,42 +414,8 @@
 </main>
 
 <script>
-  // 주간 밸런스 게임 클라이언트 투표 처리
+  // #11 ~ #20 랭킹 펼치기 토글
   (function () {
-    const grid = document.getElementById('debateGrid');
-    if (!grid) return;
-    const weekKey = grid.dataset.week;
-    const storageKey = 'hallyuzine_vote_' + weekKey;
-    const baseA = parseInt(grid.dataset.pctA || '52', 10);
-    const baseB = parseInt(grid.dataset.pctB || '48', 10);
-
-    function applyVote(choice) {
-      const finalA = choice === 'A' ? Math.min(95, baseA + 1) : Math.max(5, baseA - 1);
-      const finalB = 100 - finalA;
-      document.getElementById('barA').style.width = finalA + '%';
-      document.getElementById('barB').style.width = finalB + '%';
-      document.getElementById('pctA').textContent = finalA + '% VOTED A' + (choice === 'A' ? ' (YOUR PICK)' : '');
-      document.getElementById('pctB').textContent = finalB + '% VOTED B' + (choice === 'B' ? ' (YOUR PICK)' : '');
-
-      grid.querySelectorAll('.debate-option').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.choice === choice);
-      });
-    }
-
-    const saved = localStorage.getItem(storageKey);
-    if (saved === 'A' || saved === 'B') {
-      applyVote(saved);
-    }
-
-    grid.querySelectorAll('.debate-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const choice = btn.dataset.choice;
-        localStorage.setItem(storageKey, choice);
-        applyVote(choice);
-      });
-    });
-
-    // #11 ~ #20 랭킹 펼치기 토글
     const toggleBtn = document.getElementById('toggleRanksBtn');
     const moreBox = document.getElementById('moreRanksBox');
     if (toggleBtn && moreBox) {
