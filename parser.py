@@ -108,50 +108,126 @@ def fetch_xml(url: str, timeout: int = 12) -> str:
         return raw.decode("utf-8", errors="ignore")
 
 
-def extract_og_image(article_url: str, timeout: int = 8) -> str | None:
+def clean_source_name(source_name: str) -> str:
+    return re.sub(r"\s*\([^)]*\)\s*", "", source_name or "").strip() or "HALLYUZINE"
+
+
+def _normalize_img_url(url: str) -> str:
+    url = (url or "").strip()
+    if url.startswith("//"):
+        url = "https:" + url
+    return url
+
+
+def _is_valid_press_image(url: str) -> bool:
+    if not url or not url.startswith("http"):
+        return False
+    low = url.lower()
+    blocked = [
+        "logo", "icon", "avatar", "pixel", "default", "banner", "ads/", "ad_",
+        "btn_", "sprite", "blank", "share", "sns", "profile", "reporter",
+        "journalist", "google", "gstatic", "gravatar", ".svg", ".gif", "1x1",
+        "noimage", "no_image", "placeholder", "loading"
+    ]
+    return not any(b in low for b in blocked)
+
+
+def extract_article_images(article_url: str, max_images: int = 5, timeout: int = 10) -> list[str]:
     if not article_url:
-        return None
+        return []
+    found: list[str] = []
+    seen: set[str] = set()
+
+    def add_url(raw_url: str) -> None:
+        if len(found) >= max_images:
+            return
+        u = _normalize_img_url(raw_url)
+        if not _is_valid_press_image(u):
+            return
+        key = u.split("?")[0]
+        if key not in seen:
+            seen.add(key)
+            found.append(u)
+
     try:
         safe_url = encode_iri(article_url)
         req = urllib.request.Request(safe_url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            html = resp.read(500_000).decode("utf-8", errors="ignore")
+            html = resp.read(700_000).decode("utf-8", errors="ignore")
         soup = BeautifulSoup(html, "html.parser")
+
+        # 1. 대표 메타 이미지 (og:image, twitter:image) 우선 확보
         for attr_name, attr_val in [("property", "og:image"), ("name", "twitter:image")]:
             meta = soup.find("meta", attrs={attr_name: attr_val})
             if meta and meta.get("content"):
-                img_url = meta["content"].strip()
-                if img_url.startswith("//"):
-                    img_url = "https:" + img_url
-                if img_url.startswith("http") and not any(
-                    x in img_url.lower() for x in ["logo", "icon", "avatar", "pixel", "default"]
-                ):
-                    return img_url
+                add_url(meta["content"])
+
+        # 2. 본문 영역 내 고화질 보도사진 추가 수집 (최대 max_images장)
+        body_selectors = [
+            "#articletxt", ".article-body", ".article_txt", ".view_con",
+            ".news-view", "article", "main"
+        ]
+        containers = []
+        for sel in body_selectors:
+            el = soup.select_one(sel)
+            if el is not None:
+                containers.append(el)
+                break
+        if not containers:
+            containers = [soup]
+
+        for container in containers:
+            for img in container.find_all("img"):
+                if len(found) >= max_images:
+                    break
+                src = img.get("data-src") or img.get("data-original") or img.get("src") or ""
+                # 작은 아이콘/썸네일 크기 속성 제외
+                w_attr = str(img.get("width", "")).replace("px", "").strip()
+                h_attr = str(img.get("height", "")).replace("px", "").strip()
+                if w_attr.isdigit() and int(w_attr) < 180:
+                    continue
+                if h_attr.isdigit() and int(h_attr) < 120:
+                    continue
+                add_url(src)
     except Exception as e:
-        print(f"[Parser] og:image 추출 실패 ({article_url}): {e}", flush=True)
-    return None
+        print(f"[Parser] 원문 이미지 추출 실패 ({article_url}): {e}", flush=True)
+
+    return found
 
 
-def extract_rss_image(item: ET.Element, body_html: str, category: str, article_url: str = "") -> str:
+def extract_rss_images(item: ET.Element, body_html: str, category: str, article_url: str = "", max_images: int = 5) -> list[str]:
+    images: list[str] = []
+    seen: set[str] = set()
+
+    def add_url(raw_url: str) -> None:
+        if len(images) >= max_images:
+            return
+        u = _normalize_img_url(raw_url)
+        if not _is_valid_press_image(u):
+            return
+        key = u.split("?")[0]
+        if key not in seen:
+            seen.add(key)
+            images.append(u)
+
     for elem in item.iter():
         tag = elem.tag.lower()
         if tag.endswith("content") or tag.endswith("thumbnail") or tag.endswith("enclosure"):
-            img_url = elem.attrib.get("url", "")
-            if img_url.startswith("http") and not any(x in img_url.lower() for x in ["logo", "icon", "avatar", "pixel"]):
-                return img_url
+            add_url(elem.attrib.get("url", ""))
 
     if body_html:
         soup = BeautifulSoup(body_html, "html.parser")
         for img in soup.find_all("img"):
-            src = img.get("src", "").strip()
-            if src.startswith("http") and not any(x in src.lower() for x in ["google", "gstatic", "logo", "icon", "gravatar", "pixel"]):
-                return src
+            add_url(img.get("src", ""))
 
-    og_img = extract_og_image(article_url)
-    if og_img:
-        return og_img
+    if len(images) < max_images and article_url:
+        for img_u in extract_article_images(article_url, max_images=max_images):
+            add_url(img_u)
 
-    return DEFAULT_CATEGORY_IMAGES.get(category, DEFAULT_CATEGORY_IMAGES["culture"])
+    if not images:
+        images.append(DEFAULT_CATEGORY_IMAGES.get(category, DEFAULT_CATEGORY_IMAGES["culture"]))
+
+    return images
 
 
 def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferred_categories: list[str]) -> list[dict]:
@@ -221,19 +297,21 @@ def fetch_rss_candidates(existing_urls: set, existing_titles: list[str], preferr
 
     candidates = []
     for rc in raw_candidates[:8]:
-        image_url = extract_rss_image(rc["item"], rc["desc_raw"], rc["category"], rc["source_url"])
+        image_urls = extract_rss_images(rc["item"], rc["desc_raw"], rc["category"], rc["source_url"], max_images=5)
+        clean_src = clean_source_name(rc["source_name"])
         print(
-            f"[Parser] 후보 확보 [{rc['category'].upper()}] ({rc['source_name']}): {rc['raw_title']} | IMG: {image_url}",
+            f"[Parser] 후보 확보 [{rc['category'].upper()}] ({clean_src}): {rc['raw_title']} | IMGS({len(image_urls)}): {image_urls[0]}",
             flush=True,
         )
         candidates.append({
             "category": rc["category"],
             "raw_title": rc["raw_title"],
             "source_url": rc["source_url"],
-            "source_name": rc["source_name"],
+            "source_name": clean_src,
             "raw_text": rc["raw_text"],
-            "image_url": image_url,
-            "image_credit": f"Photo via {rc['source_name']}"
+            "image_url": image_urls[0],
+            "image_urls": image_urls,
+            "image_credit": f"(Photo: {clean_src})"
         })
 
     return candidates

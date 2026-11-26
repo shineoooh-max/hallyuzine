@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Na Young-seok’s New Variety Venture Pairs Lee Seo-jin, Han Ji-min, and K-Pop Stars — HALLYUZINE</title>
   <meta name="description" content="Veteran producer Na PD recruits MONSTA X’s Jooheon and TWICE’s Jeongyeon as new porters alongside bickering favorites." />
-  <link rel="canonical" href="https://hallyuzine.pages.dev/20261126-na-young-seoks-new-variety-venture-pairs-lee-seo-jin-han-ji-min-a.html" />
+  <link rel="canonical" href="https://hallyuzine.com/20261126-na-young-seoks-new-variety-venture-pairs-lee-seo-jin-han-ji-min-a.html" />
 
   <!-- Open Graph / Social -->
   <meta property="og:type" content="article" />
@@ -13,7 +13,7 @@
   <meta property="og:title" content="Na Young-seok’s New Variety Venture Pairs Lee Seo-jin, Han Ji-min, and K-Pop Stars — HALLYUZINE" />
   <meta property="og:description" content="Veteran producer Na PD recruits MONSTA X’s Jooheon and TWICE’s Jeongyeon as new porters alongside bickering favorites." />
   <meta property="og:image" content="https://img.hankyung.com/photo/202611/ZN.46554611.1.jpg" />
-  <meta property="og:url" content="https://hallyuzine.pages.dev/20261126-na-young-seoks-new-variety-venture-pairs-lee-seo-jin-han-ji-min-a.html" />
+  <meta property="og:url" content="https://hallyuzine.com/20261126-na-young-seoks-new-variety-venture-pairs-lee-seo-jin-han-ji-min-a.html" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <!-- Google Fonts: Broadsheet Serif & Clean Sans -->
@@ -42,7 +42,7 @@
       --paper-card: #EFECE4;
       --ink-black: #111111;
       --ink-muted: #58554E;
-      --accent-red: #C81E2B;
+      --accent-red: #C8102E;
       --border-thin: 1px solid #111111;
       --border-thick: 2px solid #111111;
       --font-serif: 'Playfair Display', Georgia, serif;
@@ -195,6 +195,11 @@
       color: var(--accent-red);
     }
 
+    .buzz-score {
+      color: var(--accent-red);
+      font-weight: 800;
+    }
+
     /* 푸터 */
     .site-footer {
       border-top: var(--border-thick);
@@ -248,7 +253,7 @@
   <div class="masthead-wrap">
     <div class="dateline-bar">
       <span>SEOUL EDITION • GLOBAL K-CULTURE BROADSHEET</span>
-      <span>THURSDAY, NOVEMBER 26, 2026</span>
+      <span>FRIDAY, NOVEMBER 27, 2026</span>
     </div>
     <div class="masthead-title-box">
       <a href="index.html" class="masthead-logo">HALLYUZINE</a>
@@ -324,8 +329,8 @@
 
   .article-hero-figure img {
     width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
+    height: auto;
+    display: block;
   }
 
   .article-hero-caption {
@@ -333,7 +338,8 @@
     font-size: 0.72rem;
     color: var(--ink-muted);
     border-top: var(--border-thin);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
+    line-height: 1.45;
   }
 
   .dossier-box {
@@ -360,9 +366,11 @@
   .dossier-badge {
     font-family: var(--font-sans);
     font-size: 0.65rem;
-    background-color: var(--ink-black);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background-color: var(--accent-red);
     color: var(--paper-bg);
-    padding: 0.15rem 0.45rem;
+    padding: 0.18rem 0.5rem;
   }
 
   .dossier-box ul {
@@ -382,6 +390,7 @@
     color: var(--ink-black);
   }
 
+  .article-body h2,
   .article-body h3 {
     font-family: var(--font-serif);
     font-size: 1.35rem;
@@ -394,6 +403,109 @@
 
   .article-body p {
     margin: 0 0 1.25rem 0;
+  }
+
+  .article-inline-figure {
+    margin: 1.75rem 0;
+    border: var(--border-thin);
+    background-color: var(--paper-card);
+  }
+
+  .article-inline-figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: zoom-in;
+  }
+
+  .article-inline-caption {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    border-top: var(--border-thin);
+    line-height: 1.45;
+  }
+
+  .article-gallery {
+    margin: 2.25rem 0 1.5rem 0;
+    padding-top: 1.25rem;
+    border-top: var(--border-thick);
+  }
+
+  .article-gallery-title {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 1rem 0;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (max-width: 600px) {
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .gallery-item {
+    margin: 0;
+    border: var(--border-thin);
+    background-color: var(--paper-card);
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: zoom-in;
+  }
+
+  .gallery-item figcaption {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    border-top: var(--border-thin);
+    line-height: 1.4;
+  }
+
+  .photo-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(17, 17, 17, 0.92);
+    padding: 2rem 1.25rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    cursor: zoom-out;
+  }
+
+  .photo-lightbox.open {
+    display: flex;
+  }
+
+  .photo-lightbox img {
+    max-width: min(92vw, 1100px);
+    max-height: 82vh;
+    width: auto;
+    height: auto;
+    border: 1px solid rgba(247, 245, 240, 0.35);
+  }
+
+  .photo-lightbox-caption {
+    color: #F7F5F0;
+    font-size: 0.8rem;
+    text-align: center;
+    max-width: 760px;
   }
 
   .article-source-note {
@@ -478,16 +590,53 @@
   }
 
   .sidebar-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
     padding-bottom: 1rem;
     border-bottom: var(--border-thin);
   }
 
+  .sidebar-thumb {
+    width: 28%;
+    flex: 0 0 28%;
+    position: relative;
+    border: var(--border-thin);
+    background-color: var(--paper-card);
+    overflow: hidden;
+  }
+
+  .sidebar-thumb img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .sidebar-rank-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #111111;
+    color: #F7F5F0;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 0.22rem 0.36rem;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-info {
+    width: 72%;
+    flex: 1 1 72%;
+    min-width: 0;
+  }
+
   .sidebar-item-title {
     font-family: var(--font-serif);
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     font-weight: 700;
-    line-height: 1.35;
-    margin: 0.25rem 0 0 0;
+    line-height: 1.32;
+    margin: 0.2rem 0 0 0;
   }
 </style>
 
@@ -503,7 +652,7 @@
 
       <figure class="article-hero-figure">
         <img src="https://img.hankyung.com/photo/202611/ZN.46554611.1.jpg" alt="Na Young-seok’s New Variety Venture Pairs Lee Seo-jin, Han Ji-min, and K-Pop Stars" />
-        <figcaption class="article-hero-caption">Photo via Korea Economic Daily (Entertainment)</figcaption>
+        <figcaption class="article-hero-caption">(Photo: Korea Economic Daily (Entertainment)</figcaption>
       </figure>
 
       <section class="dossier-box" aria-label="Key Facts Summary">
@@ -520,8 +669,10 @@
         <h3>The Return of Television’s Ultimate Hitmaker</h3><p>Few names carry as much weight in Korean unscripted television as producer Na Young-seok, affectionately known to global fans as Na PD. From the groundbreaking <em>Grandpas Over Flowers</em> to the culinary chaos of <em>Jinny’s Kitchen</em>, Na has built an empire on unscripted authenticity, gentle humor, and unexpected chemistry. Now, the veteran director is poised to capture international streaming audiences once again with a fresh variety project that bridges generational gaps between prestige Korean cinema and global K-Pop.</p><p>The newly announced lineup immediately signals a return to the high-energy, travel-infused storytelling that made Na’s earlier works cultural phenomena. By blending seasoned actors with top-tier idol performers, the upcoming series promises the exact kind of cross-fandom appeal that dominates social media timelines from Seoul to Los Angeles.</p><h3>A-List Bickering Meets Fresh Idol Energy</h3><p>At the center of the show’s dynamic are acclaimed actors Lee Seo-jin and Han Ji-min. Both stars share a long-standing, famously candid rapport, and early previews of their on-screen bickering have already sparked anticipation among longtime viewers. Lee’s signature dry wit and reluctant leadership style—a staple of Na PD’s most successful franchises—find an ideal foil in Han’s bright, unfiltered energy.</p><p>Injecting a surge of youthful vitality into the cast are two of K-Pop’s most recognizable figures: Jooheon of MONSTA X and Jeongyeon of TWICE. Stepping into the iconic role of the 'new porters,' the two idols are tasked with handling the heavy lifting, logistics, and day-to-day support for the senior cast. For international fans, watching powerhouse stage performers navigate the humble, unpredictable realities of variety television is an irresistible draw.</p><h3>Why the 'Porter' Formula Still Resonates</h3><p>The 'porter' concept is a classic hallmark of Na Young-seok’s universe, famously launched when Lee Seo-jin himself was recruited to carry luggage and manage itineraries for veteran actors. Watching Jooheon and Jeongyeon inherit that mantle creates a clever full-circle moment for the franchise. It flips the script on Lee, allowing him to transition from the overworked junior to the seasoned veteran observing a new generation of stars.</p><p>As Korean variety content continues to expand its footprint on global OTT platforms, audiences increasingly crave comfort viewing that feels genuine rather than overly scripted. With a cast boasting immense star power, effortless comedic timing, and built-in global fanbases, Na PD’s latest endeavor is firmly positioned to become the next must-watch unscripted sensation.</p>
       </div>
 
+      
+
       <div class="article-source-note">
-        Editorial reporting compiled and adapted in English for global readers. Photo via Korea Economic Daily (Entertainment)
+        Editorial reporting compiled and adapted in English for global readers. (Photo: Korea Economic Daily (Entertainment)
       </div>
 
       
@@ -543,32 +694,62 @@
         <div class="sidebar-list">
           
             <a href="20261126-rescene-aespa-and-bts-lead-k-pops-tri-nation-streaming-dominance.html" class="sidebar-item">
-              <span class="cat-tag">MUSIC • BUZZ 91</span>
-              <h3 class="sidebar-item-title">Rescene, aespa, and BTS Lead K-Pop’s Tri-Nation Streaming Dominance</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">01</span>
+                <img src="https://newsimg.koreatimes.co.kr/2026/11/26/f1463f5c-0b7f-4b77-957d-34c0861c494b.jpg" alt="Rescene, aespa, and BTS Lead K-Pop’s Tri-Nation Streaming Dominance" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">MUSIC • <span class="buzz-score">BUZZ 91</span></span>
+                <h3 class="sidebar-item-title">Rescene, aespa, and BTS Lead K-Pop’s Tri-Nation Streaming Dominance</h3>
+              </div>
             </a>
             
 
             <a href="20261126-park-jung-soo-reveals-the-playful-off-screen-banter-of-lee-seo-ji.html" class="sidebar-item">
-              <span class="cat-tag">CULTURE • BUZZ 85</span>
-              <h3 class="sidebar-item-title">Park Jung-soo Reveals the Playful Off-Screen Banter of Lee Seo-jin and Han Ji-min</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">02</span>
+                <img src="https://img.hankyung.com/photo/202611/ZN.46554607.1.jpg" alt="Park Jung-soo Reveals the Playful Off-Screen Banter of Lee Seo-jin and Han Ji-min" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">CULTURE • <span class="buzz-score">BUZZ 85</span></span>
+                <h3 class="sidebar-item-title">Park Jung-soo Reveals the Playful Off-Screen Banter of Lee Seo-jin and Han Ji-min</h3>
+              </div>
             </a>
             
 
             <a href="20261126-when-icons-miss-red-carpet-styling-under-scrutiny-in-seoul.html" class="sidebar-item">
-              <span class="cat-tag">STYLE • BUZZ 86</span>
-              <h3 class="sidebar-item-title">When Icons Miss: Red-Carpet Styling Under Scrutiny in Seoul</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">03</span>
+                <img src="https://newsimg.koreatimes.co.kr/2026/11/26/de029ab3-8909-4ccd-87bd-be0873345321.jpeg" alt="When Icons Miss: Red-Carpet Styling Under Scrutiny in Seoul" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">STYLE • <span class="buzz-score">BUZZ 86</span></span>
+                <h3 class="sidebar-item-title">When Icons Miss: Red-Carpet Styling Under Scrutiny in Seoul</h3>
+              </div>
             </a>
             
 
             <a href="20261126-lee-seo-jin-jokes-hes-past-his-porter-days-in-banter-with-kim-yon.html" class="sidebar-item">
-              <span class="cat-tag">CULTURE • BUZZ 85</span>
-              <h3 class="sidebar-item-title">Lee Seo-jin Jokes He’s Past His ‘Porter’ Days in Banter with Kim Yong-gun</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">04</span>
+                <img src="https://img.hankyung.com/photo/202611/ZN.46554144.1.jpg" alt="Lee Seo-jin Jokes He’s Past His ‘Porter’ Days in Banter with Kim Yong-gun" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">CULTURE • <span class="buzz-score">BUZZ 85</span></span>
+                <h3 class="sidebar-item-title">Lee Seo-jin Jokes He’s Past His ‘Porter’ Days in Banter with Kim Yong-gun</h3>
+              </div>
             </a>
             
 
             <a href="20261126-aespas-karina-unveils-sleek-bob-in-high-fashion-transformation.html" class="sidebar-item">
-              <span class="cat-tag">STYLE • BUZZ 94</span>
-              <h3 class="sidebar-item-title">Aespa's Karina Unveils Sleek Bob in High-Fashion Transformation</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">05</span>
+                <img src="https://newsimg.koreatimes.co.kr/2026/11/26/91fade86-14bc-47f7-b0e7-32d31b172387.jpeg" alt="Aespa's Karina Unveils Sleek Bob in High-Fashion Transformation" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">STYLE • <span class="buzz-score">BUZZ 94</span></span>
+                <h3 class="sidebar-item-title">Aespa's Karina Unveils Sleek Bob in High-Fashion Transformation</h3>
+              </div>
             </a>
             
         </div>
@@ -576,6 +757,34 @@
     </aside>
   </div>
 </main>
+
+<div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged Photo">
+  <img id="lightboxImg" src="" alt="" />
+  <div id="lightboxCaption" class="photo-lightbox-caption"></div>
+</div>
+
+<script>
+  (function () {
+    const lb = document.getElementById('photoLightbox');
+    const lbImg = document.getElementById('lightboxImg');
+    const lbCap = document.getElementById('lightboxCaption');
+    if (!lb || !lbImg || !lbCap) return;
+
+    document.querySelectorAll('.js-zoomable').forEach(img => {
+      img.addEventListener('click', () => {
+        lbImg.src = img.src;
+        lbImg.alt = img.alt || '';
+        lbCap.textContent = img.dataset.caption || img.alt || '';
+        lb.classList.add('open');
+      });
+    });
+
+    lb.addEventListener('click', () => lb.classList.remove('open'));
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') lb.classList.remove('open');
+    });
+  })();
+</script>
 
 <footer class="site-footer">
     <div class="footer-inner">

@@ -5,7 +5,7 @@ config.py - HALLYUZINE 핵심 환경설정 및 메타데이터
 # 1. 사이트 기본 정보
 SITE_NAME = "HALLYUZINE"
 SITE_TAGLINE = "The Global Broadsheet for K-Culture, Music & Screen Trends"
-SITE_URL = "https://hallyuzine.pages.dev"
+SITE_URL = "https://hallyuzine.com"
 LANGUAGE = "en"
 
 # 2. Gemini 모델 설정 (메인 모델 + 503 과부하 시 자동 폴백 모델)

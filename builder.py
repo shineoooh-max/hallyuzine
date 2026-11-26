@@ -72,7 +72,8 @@ Otherwise, transform it into an original, authoritative, magazine-grade English 
     "Fact 2: Artists, cast, directors, or luxury brands involved",
     "Fact 3: Notable milestone, chart record, or cultural significance"
   ],
-  "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h3> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <h2>, <html>, or markdown."
+  "photo_caption": "Concise 1-line English scene description in Western broadsheet style (max 95 chars). Do NOT include dates, nationality/occupation prefixes like 'South Korean actress/singer', or photo credits. Example: 'Jeon Do-yeon on the Blue Dragon Film Awards red carpet.'",
+  "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h2> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <html>, or markdown."
 }}
 
 Note on buzz_score: Rate global K-culture buzz potential as an integer between 82 and 99.
@@ -241,6 +242,76 @@ def render_footer(current_year: str) -> str:
     return tpl.replace("<!--{{CURRENT_YEAR}}-->", current_year)
 
 
+def format_photo_caption(scene_caption: str, source_name: str, fallback_credit: str = "") -> str:
+    clean_src = parser.clean_source_name(source_name) if source_name else ""
+    if not clean_src and fallback_credit:
+        m = re.search(r"(?:Photo(?:\s+via|\s*:)?\s*)([^)]+)", fallback_credit, re.IGNORECASE)
+        clean_src = parser.clean_source_name(m.group(1)) if m else "HALLYUZINE"
+    clean_src = clean_src or "HALLYUZINE"
+
+    desc = (scene_caption or "").strip()
+    if desc:
+        if desc[-1] not in ".!?":
+            desc += "."
+        return f"{desc} (Photo: {clean_src})"
+    return f"(Photo: {clean_src})"
+
+
+def inject_inline_images(body_html: str, inline_images: list[str], caption: str, alt_title: str) -> str:
+    if not inline_images:
+        return body_html
+
+    # <h2> 또는 <h3> 소제목 위치를 찾아 2번째·3번째 소제목 앞에 2~3번 이미지 교차 삽입
+    matches = list(re.finditer(r"<h[23][^>]*>", body_html, re.IGNORECASE))
+    if len(matches) < 2:
+        figs = "".join([
+            f"""
+            <figure class="article-inline-figure">
+              <img src="{img_u}" alt="{alt_title}" class="js-zoomable" data-caption="{caption}" loading="lazy" />
+              <figcaption class="article-inline-caption">{caption}</figcaption>
+            </figure>
+            """
+            for img_u in inline_images[:2]
+        ])
+        return body_html + figs
+
+    # 삽입 지점: 2번째 소제목 앞, 3번째 소제목 앞 (역순 삽입으로 인덱스 유지)
+    insert_targets = matches[1:1 + len(inline_images[:2])]
+    result = body_html
+    for match, img_u in reversed(list(zip(insert_targets, inline_images[:2]))):
+        fig_html = f"""
+        <figure class="article-inline-figure">
+          <img src="{img_u}" alt="{alt_title}" class="js-zoomable" data-caption="{caption}" loading="lazy" />
+          <figcaption class="article-inline-caption">{caption}</figcaption>
+        </figure>
+        """
+        idx = match.start()
+        result = result[:idx] + fig_html + result[idx:]
+    return result
+
+
+def render_photo_gallery(gallery_images: list[str], caption: str, alt_title: str) -> str:
+    if not gallery_images:
+        return ""
+    items_html = "\n".join([
+        f"""
+        <figure class="gallery-item">
+          <img src="{img_u}" alt="{alt_title}" class="js-zoomable" data-caption="{caption}" loading="lazy" />
+          <figcaption>{caption}</figcaption>
+        </figure>
+        """
+        for img_u in gallery_images[:2]
+    ])
+    return f"""
+    <section class="article-gallery" aria-label="Photo Gallery">
+      <h3 class="article-gallery-title">Photo Gallery</h3>
+      <div class="gallery-grid">
+        {items_html}
+      </div>
+    </section>
+    """
+
+
 def build_site() -> None:
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -280,6 +351,10 @@ def build_site() -> None:
         date_prefix = now_kst.strftime("%Y%m%d")
         slug = f"{date_prefix}-{slugify(ai_data['title'])}.html"
 
+        clean_src = parser.clean_source_name(cand.get("source_name", ""))
+        photo_caption_full = format_photo_caption(ai_data.get("photo_caption", ""), clean_src)
+        image_urls = cand.get("image_urls") or [cand["image_url"]]
+
         post_record = {
             "slug": slug,
             "category": cat_key,
@@ -291,8 +366,11 @@ def build_site() -> None:
             "buzz_score": ai_data.get("buzz_score", 90),
             "dossier_facts": ai_data.get("dossier_facts", []),
             "body_html": ai_data["body_html"],
-            "image_url": cand["image_url"],
-            "image_credit": cand["image_credit"],
+            "image_url": image_urls[0],
+            "image_urls": image_urls[:5],
+            "photo_caption": ai_data.get("photo_caption", ""),
+            "source_name": clean_src,
+            "image_credit": photo_caption_full,
             "source_url": cand["source_url"],
             "published_iso": now_kst.isoformat(),
             "published_display": now_kst.strftime("%b %d, %Y").upper()
@@ -340,11 +418,17 @@ def build_site() -> None:
         sidebar_html = "\n".join([
             f"""
             <a href="{rp['slug']}" class="sidebar-item">
-              <span class="cat-tag">{rp['category_label']} • BUZZ {rp.get('buzz_score', 88)}</span>
-              <h3 class="sidebar-item-title">{rp['title']}</h3>
+              <div class="sidebar-thumb">
+                <span class="sidebar-rank-badge">{rank_idx:02d}</span>
+                <img src="{rp['image_url']}" alt="{rp['title']}" loading="lazy" />
+              </div>
+              <div class="sidebar-info">
+                <span class="cat-tag">{rp['category_label']} • <span class="buzz-score">BUZZ {rp.get('buzz_score', 88)}</span></span>
+                <h3 class="sidebar-item-title">{rp['title']}</h3>
+              </div>
             </a>
             """
-            for rp in related_posts
+            for rank_idx, rp in enumerate(related_posts, start=1)
         ])
 
         json_ld = f"""
@@ -375,6 +459,18 @@ def build_site() -> None:
         )
         footer_html = render_footer(current_year)
 
+        post_images = post.get("image_urls") or [post["image_url"]]
+        hero_image = post_images[0]
+        inline_images = post_images[1:3]
+        gallery_images = post_images[3:5]
+        caption_text = format_photo_caption(
+            post.get("photo_caption", ""),
+            post.get("source_name", ""),
+            post.get("image_credit", "")
+        )
+        enriched_body_html = inject_inline_images(post["body_html"], inline_images, caption_text, post["title"])
+        gallery_html = render_photo_gallery(gallery_images, caption_text, post["title"])
+
         page_html = article_tpl
         replacements = {
             "<!--{{BASE_HEADER}}-->": header_html,
@@ -384,10 +480,11 @@ def build_site() -> None:
             "<!--{{ARTICLE_TITLE}}-->": post["title"],
             "<!--{{ARTICLE_SUBTITLE}}-->": post["subtitle"],
             "<!--{{PUBLISHED_DATE}}-->": post["published_display"],
-            "<!--{{HERO_IMAGE}}-->": post["image_url"],
-            "<!--{{IMAGE_CREDIT}}-->": post["image_credit"],
+            "<!--{{HERO_IMAGE}}-->": hero_image,
+            "<!--{{IMAGE_CREDIT}}-->": caption_text,
             "<!--{{DOSSIER_LIST}}-->": dossier_html,
-            "<!--{{ARTICLE_BODY}}-->": post["body_html"],
+            "<!--{{ARTICLE_BODY}}-->": enriched_body_html,
+            "<!--{{PHOTO_GALLERY}}-->": gallery_html,
             "<!--{{NEXT_ISSUE_CARD}}-->": next_card_html,
             "<!--{{SIDEBAR_RELATED}}-->": sidebar_html,
         }
@@ -534,7 +631,7 @@ def build_site() -> None:
           <div class="rank-row-content">
             <div class="rank-row-meta">
               <span class="cat-tag">{p['category_label']}</span>
-              <span>• BUZZ {p.get('buzz_score', 86)}</span>
+              <span class="buzz-score">• BUZZ {p.get('buzz_score', 86)}</span>
               <span>• {p['published_display']}</span>
             </div>
             <h3 class="rank-row-title">{p['title']}</h3>
