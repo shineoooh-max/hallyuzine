@@ -277,46 +277,58 @@
 
     .debate-dark-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
+      align-items: stretch;
     }
 
-    @media (min-width: 720px) {
-      .debate-dark-box--main .debate-dark-grid {
-        grid-template-columns: 1fr 1fr;
+    @media (max-width: 640px) {
+      .debate-dark-grid {
+        gap: 0.55rem;
       }
     }
 
     .debate-dark-box--sidebar .debate-dark-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.55rem;
+    }
+
+    .debate-dark-card-wrap {
+      display: flex;
+      flex-direction: column;
+      background-color: #1C1C1C;
+      border: 1px solid rgba(247, 245, 240, 0.25);
+      min-width: 0;
     }
 
     .debate-dark-card {
       appearance: none;
+      width: 100%;
+      flex: 1;
       text-align: left;
-      background-color: #1C1C1C;
+      background-color: transparent;
       color: #F7F5F0;
-      border: 1px solid rgba(247, 245, 240, 0.25);
+      border: none;
       padding: 0;
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      transition: border-color 0.15s ease, background-color 0.15s ease;
+      transition: background-color 0.15s ease;
     }
 
     .debate-dark-card:hover,
     .debate-dark-card.is-selected {
-      border-color: var(--accent-red);
-      background-color: #242424;
+      background-color: #262626;
     }
 
     .debate-dark-card.is-selected {
-      border-width: 2px;
+      outline: 2px solid var(--accent-red);
+      outline-offset: -2px;
     }
 
     .debate-dark-thumb {
       position: relative;
+      aspect-ratio: 4 / 3;
       width: 100%;
       border-bottom: 1px solid rgba(247, 245, 240, 0.2);
       overflow: hidden;
@@ -325,13 +337,10 @@
 
     .debate-dark-thumb img {
       width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .debate-dark-box--sidebar .debate-dark-thumb img {
-      aspect-ratio: 4 / 3;
+      height: 100%;
       object-fit: cover;
+      object-position: center 20%;
+      display: block;
     }
 
     .debate-dark-badge {
@@ -354,16 +363,33 @@
       flex: 1;
     }
 
+    @media (max-width: 640px) {
+      .debate-dark-info {
+        padding: 0.6rem;
+      }
+    }
+
     .debate-dark-box--sidebar .debate-dark-info {
       padding: 0.55rem;
     }
 
     .debate-dark-title {
       font-family: var(--font-serif);
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       font-weight: 700;
       line-height: 1.28;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.35rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .debate-dark-title {
+        font-size: 0.82rem;
+        line-height: 1.25;
+      }
     }
 
     .debate-dark-box--sidebar .debate-dark-title {
@@ -375,11 +401,53 @@
     .debate-dark-sub {
       font-size: 0.76rem;
       color: rgba(247, 245, 240, 0.68);
+      line-height: 1.4;
       margin-bottom: 0.7rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .debate-dark-sub {
+        font-size: 0.68rem;
+        margin-bottom: 0.5rem;
+      }
     }
 
     .debate-dark-box--sidebar .debate-dark-sub {
       display: none;
+    }
+
+    .debate-read-link {
+      display: block;
+      padding: 0.48rem 0.9rem;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(247, 245, 240, 0.8);
+      border-top: 1px solid rgba(247, 245, 240, 0.16);
+      background-color: #161616;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .debate-read-link:hover {
+      color: #FFFFFF;
+      background-color: var(--accent-red);
+    }
+
+    @media (max-width: 640px) {
+      .debate-read-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.62rem;
+      }
+    }
+
+    .debate-dark-box--sidebar .debate-read-link {
+      padding: 0.38rem 0.55rem;
+      font-size: 0.6rem;
     }
 
     .debate-dark-bar-track {
@@ -1090,33 +1158,39 @@
         </div>
         <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
       </div>
-      <h2 class="debate-dark-question">Which future of K-Culture are you stanning?</h2>
+      <h2 class="debate-dark-question">Which buzz story is dominating K-Culture right now?</h2>
       <div class="debate-dark-grid">
-        <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
-          <div class="debate-dark-thumb">
-            <img src="https://newsimg.koreatimes.co.kr/2026/11/26/f1463f5c-0b7f-4b77-957d-34c0861c494b.jpg" alt="Global K-Fashion Runways" loading="lazy" />
-            <span class="debate-dark-badge">PICK A</span>
-          </div>
-          <div class="debate-dark-info">
-            <div class="debate-dark-title">Global K-Fashion Runways</div>
-            <div class="debate-dark-sub">Jakarta Fashion Week 2027 Style</div>
-            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
-            <div class="debate-dark-pct js-pct-a">50%</div>
-          </div>
-        </button>
+        <div class="debate-dark-card-wrap">
+          <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
+            <div class="debate-dark-thumb">
+              <img src="https://newsimg.koreatimes.co.kr/2026/11/26/91fade86-14bc-47f7-b0e7-32d31b172387.jpeg" alt="Aespa's Karina Unveils Sleek Bob in High-Fashion Transformation" loading="lazy" />
+              <span class="debate-dark-badge">PICK A</span>
+            </div>
+            <div class="debate-dark-info">
+              <div class="debate-dark-title">Aespa's Karina Unveils Sleek Bob in High-Fashion Transformation</div>
+              <div class="debate-dark-sub">The K-pop powerhouse trades her signature long locks for a razor-sharp, chin-length cut that has fans and fashion insiders buzzing.</div>
+              <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
+              <div class="debate-dark-pct js-pct-a">50%</div>
+            </div>
+          </button>
+          <a href="20261126-aespas-karina-unveils-sleek-bob-in-high-fashion-transformation.html" class="debate-read-link">Read Story &rarr;</a>
+        </div>
 
-        <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
-          <div class="debate-dark-thumb">
-            <img src="https://img.hankyung.com/photo/202611/ZN.46554607.1.jpg" alt="AI Idol Movie Stars" loading="lazy" />
-            <span class="debate-dark-badge">PICK B</span>
-          </div>
-          <div class="debate-dark-info">
-            <div class="debate-dark-title">AI Idol Movie Stars</div>
-            <div class="debate-dark-sub">Meet Seoria on the Silver Screen</div>
-            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
-            <div class="debate-dark-pct js-pct-b">50%</div>
-          </div>
-        </button>
+        <div class="debate-dark-card-wrap">
+          <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
+            <div class="debate-dark-thumb">
+              <img src="https://img.hankyung.com/photo/202611/ZN.46544168.1.jpg" alt="Sol Kyung-gu and Jeon Do-yeon Sweep Top Acting Honors at Blue Dragon Film Awards" loading="lazy" />
+              <span class="debate-dark-badge">PICK B</span>
+            </div>
+            <div class="debate-dark-info">
+              <div class="debate-dark-title">Sol Kyung-gu and Jeon Do-yeon Sweep Top Acting Honors at Blue Dragon Film Awards</div>
+              <div class="debate-dark-sub">Two titans of Korean cinema triumph for 'Possible Love,' reaffirming their enduring global stature at South Korea's premier film ceremony.</div>
+              <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
+              <div class="debate-dark-pct js-pct-b">50%</div>
+            </div>
+          </button>
+          <a href="20261126-sol-kyung-gu-and-jeon-do-yeon-sweep-top-acting-honors-at-blue-dra.html" class="debate-read-link">Read Story &rarr;</a>
+        </div>
       </div>
       <div class="debate-dark-foot">
         <span class="js-total-votes">0 LIVE VOTES</span>

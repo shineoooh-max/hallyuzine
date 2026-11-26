@@ -128,92 +128,66 @@ Note on buzz_score: Rate global K-culture buzz potential as an integer between 8
 def update_weekly_debate(client: genai.Client, posts: list[dict], now_kst: datetime) -> dict:
     iso_year, iso_week, _ = now_kst.isocalendar()
     week_key = f"{iso_year}-W{iso_week:02d}"
-    debate = load_json(config.DEBATE_META_PATH, {})
 
-    latest_img_a = posts[0]["image_url"] if posts else ""
-    latest_img_b = posts[1]["image_url"] if len(posts) > 1 else latest_img_a
-
-    if debate.get("week_key") == week_key and debate.get("question"):
-        # 최신 기사 대표 이미지 경로로 항상 동기화
-        debate["option_a_img"] = latest_img_a
-        debate["option_b_img"] = latest_img_b
-        return debate
-
-    if len(posts) < 2:
+    if not posts:
         return {
             "week_key": week_key,
-            "question": "Which K-Culture wave defines this week in Seoul?",
-            "option_a_label": "4th & 5th Gen K-Pop Comebacks",
+            "question": "Which buzz story is dominating K-Culture right now?",
+            "option_a_label": "K-Pop Comebacks",
             "option_a_sub": "Chart-topping singles & world tours",
-            "option_a_img": posts[0]["image_url"] if posts else "",
-            "option_a_pct": 54,
-            "option_b_label": "Global K-Drama & OTT Blockbusters",
-            "option_b_sub": "Netflix & Disney+ weekend binge hits",
-            "option_b_img": posts[1]["image_url"] if len(posts) > 1 else "",
-            "option_b_pct": 46
+            "option_a_img": "",
+            "option_a_slug": "music.html",
+            "option_a_pct": 50,
+            "option_b_label": "K-Drama & Film Hits",
+            "option_b_sub": "Global OTT & cinema spotlights",
+            "option_b_img": "",
+            "option_b_slug": "ott.html",
+            "option_b_pct": 50,
         }
 
-    top_a, top_b = posts[0], posts[1]
-    prompt = f"""
-Create a fun, engaging "Weekly K-Culture Balance Game" (A vs B fan poll) for international HALLYUZINE readers inspired by these two trending Seoul stories:
-Story A: {top_a['title']} ({top_a['category_label']})
-Story B: {top_b['title']} ({top_b['category_label']})
+    # BUZZ 점수가 가장 높은 서로 다른 주제의 상위 기사 2건 직접 선정
+    ranked = sorted(
+        posts,
+        key=lambda p: (int(p.get("buzz_score", 0)), p.get("published_iso", "")),
+        reverse=True,
+    )
+    top_a = ranked[0]
+    top_b = ranked[1] if len(ranked) > 1 else ranked[0]
 
-Return ONLY valid JSON:
-{{
-  "question": "Punchy either/or question for global K-culture fans (max 75 chars)",
-  "option_a_label": "Short Option A title (max 34 chars)",
-  "option_a_sub": "Short context tag (max 42 chars)",
-  "option_b_label": "Short Option B title (max 34 chars)",
-  "option_b_sub": "Short context tag (max 42 chars)"
-}}
-"""
-    models_to_try = [config.GEMINI_MODEL, getattr(config, "GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite")]
-    for model_name in models_to_try:
-        try:
-            resp = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.75,
-                    thinking_config=types.ThinkingConfig(
-                        thinking_level=types.ThinkingLevel.LOW
-                    ),
-                ),
-            )
-            ai_debate = json.loads(resp.text)
-            debate = {
-                "week_key": week_key,
-                "question": ai_debate["question"],
-                "option_a_label": ai_debate["option_a_label"],
-                "option_a_sub": ai_debate["option_a_sub"],
-                "option_a_img": top_a["image_url"],
-                "option_a_pct": 53,
-                "option_b_label": ai_debate["option_b_label"],
-                "option_b_sub": ai_debate["option_b_sub"],
-                "option_b_img": top_b["image_url"],
-                "option_b_pct": 47
-            }
-            save_json(config.DEBATE_META_PATH, debate)
-            print(f"[Debate] 주간 밸런스 게임 갱신 완료 ({model_name}, {week_key}): {debate['question']}", flush=True)
-            return debate
-        except Exception as e:
-            print(f"[Debate] 모델 전환 ({model_name} 실패): {e}", flush=True)
-            time.sleep(5)
+    for cand in ranked[1:]:
+        diff_cat = cand.get("category") != top_a.get("category")
+        diff_topic = not parser.is_duplicate_topic(
+            cand.get("raw_title", cand["title"]),
+            [top_a.get("raw_title", top_a["title"])],
+        )
+        if diff_cat and diff_topic:
+            top_b = cand
+            break
+    else:
+        for cand in ranked[1:]:
+            if not parser.is_duplicate_topic(
+                cand.get("raw_title", cand["title"]),
+                [top_a.get("raw_title", top_a["title"])],
+            ):
+                top_b = cand
+                break
 
-    return {
+    debate = {
         "week_key": week_key,
-        "question": "Which Seoul headline owns your weekend watchlist?",
-        "option_a_label": top_a["title"][:34],
-        "option_a_sub": top_a["category_label"],
+        "question": "Which buzz story is dominating K-Culture right now?",
+        "option_a_label": top_a["title"],
+        "option_a_sub": top_a.get("subtitle", ""),
         "option_a_img": top_a["image_url"],
-        "option_a_pct": 52,
-        "option_b_label": top_b["title"][:34],
-        "option_b_sub": top_b["category_label"],
+        "option_a_slug": top_a["slug"],
+        "option_a_pct": 50,
+        "option_b_label": top_b["title"],
+        "option_b_sub": top_b.get("subtitle", ""),
         "option_b_img": top_b["image_url"],
-        "option_b_pct": 48
+        "option_b_slug": top_b["slug"],
+        "option_b_pct": 50,
     }
+    save_json(config.DEBATE_META_PATH, debate)
+    return debate
 
 
 def render_header(
@@ -375,31 +349,37 @@ def render_clash_widget(debate: dict, variant: str = "main") -> str:
       </div>
       <h2 class="debate-dark-question">{debate['question']}</h2>
       <div class="debate-dark-grid">
-        <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
-          <div class="debate-dark-thumb">
-            <img src="{debate['option_a_img']}" alt="{debate['option_a_label']}" loading="lazy" />
-            <span class="debate-dark-badge">PICK A</span>
-          </div>
-          <div class="debate-dark-info">
-            <div class="debate-dark-title">{debate['option_a_label']}</div>
-            <div class="debate-dark-sub">{debate['option_a_sub']}</div>
-            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
-            <div class="debate-dark-pct js-pct-a">50%</div>
-          </div>
-        </button>
+        <div class="debate-dark-card-wrap">
+          <button type="button" class="debate-dark-card js-vote-btn" data-choice="A">
+            <div class="debate-dark-thumb">
+              <img src="{debate['option_a_img']}" alt="{debate['option_a_label']}" loading="lazy" />
+              <span class="debate-dark-badge">PICK A</span>
+            </div>
+            <div class="debate-dark-info">
+              <div class="debate-dark-title">{debate['option_a_label']}</div>
+              <div class="debate-dark-sub">{debate['option_a_sub']}</div>
+              <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-a" style="width: 50%"></div></div>
+              <div class="debate-dark-pct js-pct-a">50%</div>
+            </div>
+          </button>
+          <a href="{debate.get('option_a_slug', 'index.html')}" class="debate-read-link">Read Story &rarr;</a>
+        </div>
 
-        <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
-          <div class="debate-dark-thumb">
-            <img src="{debate['option_b_img']}" alt="{debate['option_b_label']}" loading="lazy" />
-            <span class="debate-dark-badge">PICK B</span>
-          </div>
-          <div class="debate-dark-info">
-            <div class="debate-dark-title">{debate['option_b_label']}</div>
-            <div class="debate-dark-sub">{debate['option_b_sub']}</div>
-            <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
-            <div class="debate-dark-pct js-pct-b">50%</div>
-          </div>
-        </button>
+        <div class="debate-dark-card-wrap">
+          <button type="button" class="debate-dark-card js-vote-btn" data-choice="B">
+            <div class="debate-dark-thumb">
+              <img src="{debate['option_b_img']}" alt="{debate['option_b_label']}" loading="lazy" />
+              <span class="debate-dark-badge">PICK B</span>
+            </div>
+            <div class="debate-dark-info">
+              <div class="debate-dark-title">{debate['option_b_label']}</div>
+              <div class="debate-dark-sub">{debate['option_b_sub']}</div>
+              <div class="debate-dark-bar-track"><div class="debate-dark-bar-fill js-bar-b" style="width: 50%"></div></div>
+              <div class="debate-dark-pct js-pct-b">50%</div>
+            </div>
+          </button>
+          <a href="{debate.get('option_b_slug', 'index.html')}" class="debate-read-link">Read Story &rarr;</a>
+        </div>
       </div>
       <div class="debate-dark-foot">
         <span class="js-total-votes">0 LIVE VOTES</span>
