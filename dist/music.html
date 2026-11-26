@@ -187,6 +187,226 @@
       font-weight: 800;
     }
 
+    /* 24H HALLYU CLASH & 기사 하단 실시간 투표 위젯 */
+    .clash-widget {
+      background-color: var(--paper-card);
+      border-bottom: var(--border-thick);
+      padding: 1.15rem 1.25rem;
+    }
+
+    .clash-widget--sidebar {
+      border: var(--border-thick);
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+    }
+
+    .clash-head,
+    .article-poll-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .clash-kicker,
+    .article-poll-kicker {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-red);
+    }
+
+    .clash-neck-badge {
+      background-color: var(--accent-red);
+      color: #F7F5F0;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.18rem 0.45rem;
+      animation: hzPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes hzPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.62; }
+    }
+
+    .clash-question {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1.25;
+      margin: 0 0 0.85rem 0;
+    }
+
+    .clash-widget--sidebar .clash-question {
+      font-size: 1rem;
+    }
+
+    .clash-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.55rem;
+    }
+
+    @media (min-width: 720px) {
+      .clash-widget--main .clash-options {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.85rem;
+      }
+    }
+
+    .clash-btn,
+    .poll-choice-btn {
+      appearance: none;
+      width: 100%;
+      text-align: left;
+      background-color: var(--paper-bg);
+      color: var(--ink-black);
+      border: var(--border-thin);
+      padding: 0.7rem 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .clash-btn:hover,
+    .poll-choice-btn:hover {
+      border-color: var(--accent-red);
+      background-color: #FFFFFF;
+    }
+
+    .clash-btn.is-selected,
+    .poll-choice-btn.is-selected {
+      border: 2px solid var(--accent-red);
+      background-color: #FFFFFF;
+    }
+
+    .clash-btn-top,
+    .poll-choice-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .clash-opt-label,
+    .poll-choice-label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .clash-opt-pct,
+    .poll-choice-pct {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--accent-red);
+      white-space: nowrap;
+    }
+
+    .clash-bar-track,
+    .poll-gauge-track {
+      width: 100%;
+      height: 6px;
+      background-color: rgba(17, 17, 17, 0.12);
+      overflow: hidden;
+    }
+
+    .clash-bar-fill,
+    .poll-gauge-fill {
+      height: 100%;
+      background-color: var(--accent-red);
+      transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .clash-bar-fill--b,
+    .poll-gauge-fill--b {
+      background-color: var(--ink-black);
+    }
+
+    .clash-foot,
+    .article-poll-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.65rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .article-poll-box {
+      margin: 2.25rem 0 1.75rem 0;
+      padding: 1.35rem;
+      border: var(--border-thick);
+      background-color: var(--paper-card);
+    }
+
+    .article-poll-question {
+      font-family: var(--font-serif);
+      font-size: 1.28rem;
+      font-weight: 900;
+      line-height: 1.28;
+      margin: 0 0 1rem 0;
+    }
+
+    .article-poll-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .poll-letter {
+      display: inline-block;
+      background-color: var(--ink-black);
+      color: #F7F5F0;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.08rem 0.38rem;
+      margin-right: 0.35rem;
+    }
+
+    .poll-choice-btn.is-selected .poll-letter {
+      background-color: var(--accent-red);
+    }
+
+    .poll-boost-wrap {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: var(--border-thin);
+    }
+
+    .poll-boost-btn {
+      appearance: none;
+      width: 100%;
+      background-color: var(--accent-red);
+      color: #F7F5F0;
+      border: 1px solid var(--accent-red);
+      padding: 0.72rem 1rem;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .poll-boost-btn:hover {
+      background-color: #A00D25;
+    }
+
+    .poll-boost-btn:disabled {
+      background-color: var(--ink-black);
+      border-color: var(--ink-black);
+      cursor: default;
+    }
+
     /* 푸터 */
     .site-footer {
       border-top: var(--border-thick);
@@ -455,6 +675,142 @@
       </div>
     </div>
   </footer>
+  <script>
+    (function () {
+      const widgets = document.querySelectorAll('.js-live-poll');
+      if (!widgets.length) return;
+
+      function getClientId() {
+        const key = 'hz_client_id';
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'hz-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem(key, id);
+        }
+        return id;
+      }
+
+      const clientId = getClientId();
+      const isBoostParam = new URLSearchParams(window.location.search).get('boost') === '1';
+
+      function renderWidget(el, data) {
+        const pctA = Number(data.pct_a ?? 50);
+        const pctB = Number(data.pct_b ?? 50);
+        const total = Number(data.total ?? 0);
+        const isArticle = el.dataset.pollType === 'article';
+        const showBars = !isArticle || Boolean(data.voted) || total > 0;
+
+        const barA = el.querySelector('.js-bar-a');
+        const barB = el.querySelector('.js-bar-b');
+        const txtA = el.querySelector('.js-pct-a');
+        const txtB = el.querySelector('.js-pct-b');
+        const totalEl = el.querySelector('.js-total-votes');
+        const neckEl = el.querySelector('.js-neck-badge');
+        const statusEl = el.querySelector('.js-vote-status');
+        const boostWrap = el.querySelector('.js-boost-wrap');
+        const boostBtn = el.querySelector('.js-boost-btn');
+
+        if (showBars) {
+          if (barA) barA.style.width = pctA + '%';
+          if (barB) barB.style.width = pctB + '%';
+          if (txtA) txtA.textContent = pctA + '%';
+          if (txtB) txtB.textContent = pctB + '%';
+        }
+        if (totalEl) totalEl.textContent = total.toLocaleString() + ' LIVE VOTES';
+        if (neckEl) neckEl.hidden = !(Math.abs(pctA - pctB) <= 5);
+
+        el.querySelectorAll('.js-vote-btn').forEach(btn => {
+          btn.classList.toggle('is-selected', data.choice && btn.dataset.choice === data.choice);
+        });
+
+        if (data.voted) {
+          el.dataset.choice = data.choice || 'A';
+          if (statusEl) {
+            statusEl.textContent = data.boosted ? 'POWER VOTE (+3) COUNTED' : 'VOTED • 24H LOCKED';
+          }
+          if (boostWrap) boostWrap.hidden = false;
+          if (boostBtn && data.boosted) {
+            boostBtn.textContent = 'LINK COPIED • +3 POWER VOTE APPLIED';
+            boostBtn.disabled = true;
+          }
+        }
+      }
+
+      widgets.forEach(el => {
+        const pollId = el.dataset.pollId;
+        if (!pollId) return;
+
+        fetch(`/api/vote?poll_id=${encodeURIComponent(pollId)}&client_id=${encodeURIComponent(clientId)}`)
+          .then(r => (r.ok ? r.json() : null))
+          .then(data => { if (data) renderWidget(el, data); })
+          .catch(() => {});
+
+        el.querySelectorAll('.js-vote-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const choice = btn.dataset.choice;
+            try {
+              const res = await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  poll_id: pollId,
+                  choice,
+                  client_id: clientId,
+                  action: 'vote',
+                  boost: isBoostParam,
+                }),
+              });
+              const data = await res.json();
+              if (data && data.poll_id) renderWidget(el, data);
+            } catch {
+              // 로컬 정적 미리보기 폴백
+              renderWidget(el, {
+                poll_id: pollId,
+                pct_a: choice === 'A' ? 52 : 48,
+                pct_b: choice === 'A' ? 48 : 52,
+                total: 1,
+                voted: true,
+                choice,
+                boosted: isBoostParam,
+              });
+            }
+          });
+        });
+
+        const boostBtn = el.querySelector('.js-boost-btn');
+        if (boostBtn) {
+          boostBtn.addEventListener('click', async () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?boost=1`;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(shareUrl);
+              }
+            } catch {}
+
+            try {
+              const res = await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  poll_id: pollId,
+                  choice: el.dataset.choice || 'A',
+                  client_id: clientId,
+                  action: 'boost',
+                }),
+              });
+              const data = await res.json();
+              if (data && data.poll_id) renderWidget(el, data);
+            } catch {
+              boostBtn.textContent = 'LINK COPIED • +3 POWER VOTE APPLIED';
+              boostBtn.disabled = true;
+            }
+          });
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
 

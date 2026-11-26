@@ -16,5 +16,141 @@
       </div>
     </div>
   </footer>
+  <script>
+    (function () {
+      const widgets = document.querySelectorAll('.js-live-poll');
+      if (!widgets.length) return;
+
+      function getClientId() {
+        const key = 'hz_client_id';
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'hz-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem(key, id);
+        }
+        return id;
+      }
+
+      const clientId = getClientId();
+      const isBoostParam = new URLSearchParams(window.location.search).get('boost') === '1';
+
+      function renderWidget(el, data) {
+        const pctA = Number(data.pct_a ?? 50);
+        const pctB = Number(data.pct_b ?? 50);
+        const total = Number(data.total ?? 0);
+        const isArticle = el.dataset.pollType === 'article';
+        const showBars = !isArticle || Boolean(data.voted) || total > 0;
+
+        const barA = el.querySelector('.js-bar-a');
+        const barB = el.querySelector('.js-bar-b');
+        const txtA = el.querySelector('.js-pct-a');
+        const txtB = el.querySelector('.js-pct-b');
+        const totalEl = el.querySelector('.js-total-votes');
+        const neckEl = el.querySelector('.js-neck-badge');
+        const statusEl = el.querySelector('.js-vote-status');
+        const boostWrap = el.querySelector('.js-boost-wrap');
+        const boostBtn = el.querySelector('.js-boost-btn');
+
+        if (showBars) {
+          if (barA) barA.style.width = pctA + '%';
+          if (barB) barB.style.width = pctB + '%';
+          if (txtA) txtA.textContent = pctA + '%';
+          if (txtB) txtB.textContent = pctB + '%';
+        }
+        if (totalEl) totalEl.textContent = total.toLocaleString() + ' LIVE VOTES';
+        if (neckEl) neckEl.hidden = !(Math.abs(pctA - pctB) <= 5);
+
+        el.querySelectorAll('.js-vote-btn').forEach(btn => {
+          btn.classList.toggle('is-selected', data.choice && btn.dataset.choice === data.choice);
+        });
+
+        if (data.voted) {
+          el.dataset.choice = data.choice || 'A';
+          if (statusEl) {
+            statusEl.textContent = data.boosted ? 'POWER VOTE (+3) COUNTED' : 'VOTED • 24H LOCKED';
+          }
+          if (boostWrap) boostWrap.hidden = false;
+          if (boostBtn && data.boosted) {
+            boostBtn.textContent = 'LINK COPIED • +3 POWER VOTE APPLIED';
+            boostBtn.disabled = true;
+          }
+        }
+      }
+
+      widgets.forEach(el => {
+        const pollId = el.dataset.pollId;
+        if (!pollId) return;
+
+        fetch(`/api/vote?poll_id=${encodeURIComponent(pollId)}&client_id=${encodeURIComponent(clientId)}`)
+          .then(r => (r.ok ? r.json() : null))
+          .then(data => { if (data) renderWidget(el, data); })
+          .catch(() => {});
+
+        el.querySelectorAll('.js-vote-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const choice = btn.dataset.choice;
+            try {
+              const res = await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  poll_id: pollId,
+                  choice,
+                  client_id: clientId,
+                  action: 'vote',
+                  boost: isBoostParam,
+                }),
+              });
+              const data = await res.json();
+              if (data && data.poll_id) renderWidget(el, data);
+            } catch {
+              // 로컬 정적 미리보기 폴백
+              renderWidget(el, {
+                poll_id: pollId,
+                pct_a: choice === 'A' ? 52 : 48,
+                pct_b: choice === 'A' ? 48 : 52,
+                total: 1,
+                voted: true,
+                choice,
+                boosted: isBoostParam,
+              });
+            }
+          });
+        });
+
+        const boostBtn = el.querySelector('.js-boost-btn');
+        if (boostBtn) {
+          boostBtn.addEventListener('click', async () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?boost=1`;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(shareUrl);
+              }
+            } catch {}
+
+            try {
+              const res = await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  poll_id: pollId,
+                  choice: el.dataset.choice || 'A',
+                  client_id: clientId,
+                  action: 'boost',
+                }),
+              });
+              const data = await res.json();
+              if (data && data.poll_id) renderWidget(el, data);
+            } catch {
+              boostBtn.textContent = 'LINK COPIED • +3 POWER VOTE APPLIED';
+              boostBtn.disabled = true;
+            }
+          });
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

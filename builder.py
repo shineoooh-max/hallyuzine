@@ -73,6 +73,11 @@ Otherwise, transform it into an original, authoritative, magazine-grade English 
     "Fact 3: Notable milestone, chart record, or cultural significance"
   ],
   "photo_caption": "Concise 1-line English scene description in Western broadsheet style (max 95 chars). Do NOT include dates, nationality/occupation prefixes like 'South Korean actress/singer', or photo credits. Example: 'Jeon Do-yeon on the Blue Dragon Film Awards red carpet.'",
+  "poll": {
+    "question": "Punchy 1-line fandom poll question inspired by this article (max 75 chars)",
+    "option_a": "Short Option A choice (max 34 chars)",
+    "option_b": "Short Option B choice (max 34 chars)"
+  },
   "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h2> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <html>, or markdown."
 }}
 
@@ -312,6 +317,113 @@ def render_photo_gallery(gallery_images: list[str], caption: str, alt_title: str
     """
 
 
+DEFAULT_POLLS_BY_CATEGORY = {
+    "music": {
+        "question": "How hard does this K-Pop drop hit your playlist?",
+        "option_a": "Instant On-Repeat Anthem",
+        "option_b": "Growing On Me Slowly",
+    },
+    "ott": {
+        "question": "Is this Korean screen release joining your weekend watchlist?",
+        "option_a": "Day-One Binge Watch",
+        "option_b": "Waiting For Reviews",
+    },
+    "style": {
+        "question": "What's your verdict on this Seoul style moment?",
+        "option_a": "Iconic Runway Energy",
+        "option_b": "Too Bold For Me",
+    },
+    "culture": {
+        "question": "Would you put this Seoul trend on your bucket list?",
+        "option_a": "Must-Experience Now",
+        "option_b": "Admiring From Afar",
+    },
+}
+
+
+def get_post_poll(post: dict) -> dict:
+    poll = post.get("poll")
+    if isinstance(poll, dict) and poll.get("question") and poll.get("option_a") and poll.get("option_b"):
+        return {
+            "question": str(poll["question"]).strip(),
+            "option_a": str(poll["option_a"]).strip(),
+            "option_b": str(poll["option_b"]).strip(),
+        }
+    return DEFAULT_POLLS_BY_CATEGORY.get(post.get("category", "culture"), DEFAULT_POLLS_BY_CATEGORY["culture"])
+
+
+def render_clash_widget(debate: dict, variant: str = "main") -> str:
+    poll_id = f"clash-{debate.get('week_key', 'weekly')}"
+    is_sidebar = variant == "sidebar"
+    wrap_cls = "clash-widget clash-widget--sidebar" if is_sidebar else "clash-widget clash-widget--main"
+    return f"""
+    <section class="{wrap_cls} js-live-poll" data-poll-id="{poll_id}" data-poll-type="clash" aria-label="24H Hallyu Clash">
+      <div class="clash-head">
+        <span class="clash-kicker">24H HALLYU CLASH</span>
+        <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
+      </div>
+      <h2 class="clash-question">{debate['question']}</h2>
+      <div class="clash-options">
+        <button type="button" class="clash-btn js-vote-btn" data-choice="A">
+          <div class="clash-btn-top">
+            <span class="clash-opt-label">{debate['option_a_label']}</span>
+            <span class="clash-opt-pct js-pct-a">50%</span>
+          </div>
+          <div class="clash-bar-track"><div class="clash-bar-fill js-bar-a" style="width: 50%"></div></div>
+        </button>
+        <button type="button" class="clash-btn js-vote-btn" data-choice="B">
+          <div class="clash-btn-top">
+            <span class="clash-opt-label">{debate['option_b_label']}</span>
+            <span class="clash-opt-pct js-pct-b">50%</span>
+          </div>
+          <div class="clash-bar-track"><div class="clash-bar-fill clash-bar-fill--b js-bar-b" style="width: 50%"></div></div>
+        </button>
+      </div>
+      <div class="clash-foot">
+        <span class="js-total-votes">0 LIVE VOTES</span>
+        <span class="clash-status js-vote-status">TAP TO VOTE</span>
+      </div>
+    </section>
+    """
+
+
+def render_article_poll_widget(post: dict) -> str:
+    poll = get_post_poll(post)
+    poll_id = post["slug"].replace(".html", "")
+    return f"""
+    <section class="article-poll-box js-live-poll" data-poll-id="{poll_id}" data-poll-type="article" aria-label="Live Fandom Poll">
+      <div class="article-poll-head">
+        <span class="article-poll-kicker">LIVE FANDOM POLL</span>
+        <span class="clash-neck-badge js-neck-badge" hidden>NECK AND NECK</span>
+      </div>
+      <h3 class="article-poll-question">{poll['question']}</h3>
+      <div class="article-poll-options">
+        <button type="button" class="poll-choice-btn js-vote-btn" data-choice="A">
+          <div class="poll-choice-row">
+            <span class="poll-choice-label"><span class="poll-letter">A</span> {poll['option_a']}</span>
+            <span class="poll-choice-pct js-pct-a"></span>
+          </div>
+          <div class="poll-gauge-track"><div class="poll-gauge-fill js-bar-a" style="width: 0%"></div></div>
+        </button>
+        <button type="button" class="poll-choice-btn js-vote-btn" data-choice="B">
+          <div class="poll-choice-row">
+            <span class="poll-choice-label"><span class="poll-letter">B</span> {poll['option_b']}</span>
+            <span class="poll-choice-pct js-pct-b"></span>
+          </div>
+          <div class="poll-gauge-track"><div class="poll-gauge-fill poll-gauge-fill--b js-bar-b" style="width: 0%"></div></div>
+        </button>
+      </div>
+      <div class="article-poll-foot">
+        <span class="js-total-votes">0 LIVE VOTES</span>
+        <span class="poll-status js-vote-status">CAST YOUR VOTE</span>
+      </div>
+      <div class="poll-boost-wrap js-boost-wrap" hidden>
+        <button type="button" class="poll-boost-btn js-boost-btn">Copy Share Link (+3 Power Vote)</button>
+      </div>
+    </section>
+    """
+
+
 def build_site() -> None:
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -369,6 +481,7 @@ def build_site() -> None:
             "image_url": image_urls[0],
             "image_urls": image_urls[:5],
             "photo_caption": ai_data.get("photo_caption", ""),
+            "poll": ai_data.get("poll") or get_post_poll({"category": cat_key}),
             "source_name": clean_src,
             "image_credit": photo_caption_full,
             "source_url": cand["source_url"],
@@ -470,6 +583,8 @@ def build_site() -> None:
         )
         enriched_body_html = inject_inline_images(post["body_html"], inline_images, caption_text, post["title"])
         gallery_html = render_photo_gallery(gallery_images, caption_text, post["title"])
+        article_poll_html = render_article_poll_widget(post)
+        sidebar_clash_html = render_clash_widget(debate, variant="sidebar")
 
         page_html = article_tpl
         replacements = {
@@ -485,7 +600,9 @@ def build_site() -> None:
             "<!--{{DOSSIER_LIST}}-->": dossier_html,
             "<!--{{ARTICLE_BODY}}-->": enriched_body_html,
             "<!--{{PHOTO_GALLERY}}-->": gallery_html,
+            "<!--{{ARTICLE_POLL_BOX}}-->": article_poll_html,
             "<!--{{NEXT_ISSUE_CARD}}-->": next_card_html,
+            "<!--{{SIDEBAR_CLASH_WIDGET}}-->": sidebar_clash_html,
             "<!--{{SIDEBAR_RELATED}}-->": sidebar_html,
         }
         for marker, val in replacements.items():
@@ -669,9 +786,12 @@ def build_site() -> None:
     )
     footer_html = render_footer(current_year)
 
+    main_clash_html = render_clash_widget(debate, variant="main")
+
     index_html = index_tpl
     index_html = index_html.replace("<!--{{BASE_HEADER}}-->", header_html)
     index_html = index_html.replace("<!--{{BASE_FOOTER}}-->", footer_html)
+    index_html = index_html.replace("<!--{{MAIN_CLASH_WIDGET}}-->", main_clash_html)
     index_html = index_html.replace("<!--{{RANK_01_LEAD}}-->", rank_01_html)
     index_html = index_html.replace("<!--{{RANK_02_05_GRID}}-->", rank_02_05_html)
     index_html = index_html.replace("<!--{{WEEKLY_DEBATE_BOX}}-->", debate_html)
