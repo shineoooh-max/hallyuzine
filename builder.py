@@ -73,11 +73,11 @@ Otherwise, transform it into an original, authoritative, magazine-grade English 
     "Fact 3: Notable milestone, chart record, or cultural significance"
   ],
   "photo_caption": "Concise 1-line English scene description in Western broadsheet style (max 95 chars). Do NOT include dates, nationality/occupation prefixes like 'South Korean actress/singer', or photo credits. Example: 'Jeon Do-yeon on the Blue Dragon Film Awards red carpet.'",
-  "poll": {
+  "poll": {{
     "question": "Punchy 1-line fandom poll question inspired by this article (max 75 chars)",
     "option_a": "Short Option A choice (max 34 chars)",
     "option_b": "Short Option B choice (max 34 chars)"
-  },
+  }},
   "body_html": "Well-structured English editorial body (350-500 words) formatted strictly with <h2> chapter subheadings and <p> paragraphs. Break into 3 engaging, bite-sized chapters for effortless mobile reading. Do NOT include <h1>, <html>, or markdown."
 }}
 
